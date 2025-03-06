@@ -2,6 +2,7 @@ import { timerFormats } from './timerData.js';
 import { generate } from './timerFunction.js';
 
 console.log("gittesting");
+console.log("learning clone and pusjhon git hub");
 
 let timerFormatingHTML = '';
 
