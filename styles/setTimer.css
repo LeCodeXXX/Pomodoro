@@ -1,0 +1,80 @@
+html{
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+body{
+    background-color: black;
+    font-family: Poppins;
+    height: 95vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+
+.timers-container h1{
+    font-size: 45px;
+}
+
+.study-and-break p{
+    margin: 0;
+
+}
+
+
+.study-and-break h1{
+    font-size: 120px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.timer h1,
+.timer p{
+    font-weight: 300;
+    opacity: 0.5;
+    transition: all 300ms ease;
+}
+
+.timer.active h1,
+.timer.active p{
+    font-weight: 500;
+    opacity: 1;
+    transition: all 300ms ease;
+}
+
+
+
+
+.timer-nav-btn button{
+    margin-top: 20px;
+    padding: 10px 30px;
+    border-color: white;
+    border-style: solid;
+    background-color: black;
+    border-radius: 5px;
+    border-width: 1px;
+    color: white;
+    font-weight: 100;
+    cursor: pointer;
+}
+
+
+.timer-nav-btn .back-btn{
+    background-color: white;
+    color: black;
+   
+}
+
+.timer-nav-btn a{
+    color: black;
+    text-decoration: none;
+}
+
+.count-down{
+    display: flex;
+    justify-content: center;
+}
+
