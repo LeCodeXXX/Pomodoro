@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  IDENTIFICATION
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  documents    Document[]
+  quizzes      Quiz[]
+  attempts     QuizAttempt[]
+  sessions     PomodoroSession[]
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  quizzes   Quiz[]
+}
+
+model Quiz {
+  id              String       @id @default(uuid())
+  title           String
+  label           String
+  difficulty      Difficulty
+  questionType    QuestionType
+  totalQuestions  Int
+  createdAt       DateTime     @default(now())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  documentId      String?
+  document        Document?    @relation(fields: [documentId], references: [id])
+  questions       Question[]
+  attempts        QuizAttempt[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  question      String
+  answer        String
+  explanation   String
+  createdAt     DateTime @default(now())
+  quizId        String
+  quiz          Quiz     @relation(fields: [quizId], references: [id])
+  options       QuestionOption[]
+  userAnswers   UserAnswer[]
+}
+
+model QuestionOption {
+  id          String   @id @default(uuid())
+  optionText  String
+  isCorrect   Boolean
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+}
+
+model QuizAttempt {
+  id              String   @id @default(uuid())
+  score           Int
+  totalQuestions  Int
+  completedAt     DateTime @default(now())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  quizId          String
+  quiz            Quiz     @relation(fields: [quizId], references: [id])
+  answers         UserAnswer[]
+}
+
+model UserAnswer {
+  id          String   @id @default(uuid())
+  userAnswer  String
+  isCorrect   Boolean
+  attemptId   String
+  attempt     QuizAttempt @relation(fields: [attemptId], references: [id])
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+}
+
+model PomodoroSession {
+  id          String   @id @default(uuid())
+  duration    Int
+  completed   Boolean
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+}
+
