@@ -293,7 +293,7 @@ function App() {
             </motion.div>
           </>
         ) : (
-          <StudyMaterialPage />
+          <StudyMaterialPage user={user} />
         )}
       </div>
 
@@ -307,7 +307,13 @@ function App() {
           </button>
           <span className="text-gray-700">•</span>
           <button 
-            onClick={() => setCurrentPage('materials')}
+            onClick={() => {
+              if (!user) {
+                setIsAuthOpen(true)
+              } else {
+                setCurrentPage('materials')
+              }
+            }}
             className={`transition-colors hover:text-white ${currentPage === 'materials' ? 'text-white font-bold' : 'text-gray-500'}`}
           >
             MATERIALS

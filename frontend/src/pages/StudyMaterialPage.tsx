@@ -1,27 +1,96 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, Search, BookOpen, BrainCircuit, MoreVertical, X, File as FileIcon } from 'lucide-react';
+import { Upload, Search, BookOpen, BrainCircuit, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
+import { PDFViewer } from '../components/PDFViewer';
+import { TextViewer } from '../components/TextViewer';
 
 interface Material {
   id: string;
   name: string;
   type: string;
   dateAdded: string;
-  size: string;
+  size?: string;
+  url?: string;
 }
 
-const MOCK_MATERIALS: Material[] = [
-  { id: '1', name: 'Biology Chapter 1: Cell Structure', type: 'PDF', dateAdded: 'Today', size: '2.4 MB' },
-  { id: '2', name: 'Midterm Review Notes', type: 'DOCX', dateAdded: 'Yesterday', size: '1.1 MB' },
-  { id: '3', name: 'Programming Concepts', type: 'TXT', dateAdded: '3 days ago', size: '14 KB' },
-];
+interface StudyMaterialPageProps {
+  user: any;
+}
 
-export function StudyMaterialPage() {
-  const [materials, setMaterials] = useState<Material[]>(MOCK_MATERIALS);
+export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fetchMaterials = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch('http://localhost:3000/api/documents', {
+        headers: { 'x-user-id': user.id }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const fetchedMaterials = data.documents.map((doc: any) => ({
+          id: doc.id,
+          name: doc.title,
+          type: doc.fileUrl.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+          dateAdded: new Date(doc.createdAt).toLocaleDateString(),
+          url: `http://localhost:3000${doc.fileUrl}`,
+          size: 'Unknown'
+        }));
+        setMaterials(fetchedMaterials);
+      }
+    } catch (error) {
+      console.error('Failed to fetch materials:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaterials();
+  }, [user]);
 
   const filteredMaterials = materials.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user) {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const response = await fetch('http://localhost:3000/api/documents/upload', {
+          method: 'POST',
+          headers: { 'x-user-id': user.id },
+          body: formData
+        });
+        
+        const data = await response.json();
+        if (response.ok) {
+          const doc = data.document;
+          const newMaterial: Material = {
+            id: doc.id,
+            name: doc.title,
+            type: doc.fileUrl.split('.').pop()?.toUpperCase() || 'UNKNOWN',
+            dateAdded: 'Just now',
+            url: `http://localhost:3000${doc.fileUrl}`,
+            size: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+          };
+          setMaterials([newMaterial, ...materials]);
+          setSelectedMaterial(newMaterial);
+        } else {
+          console.error('Upload failed:', data.error);
+        }
+      } catch (error) {
+        console.error('Failed to upload material:', error);
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
 
   return (
     <div className="w-full h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 p-6 max-w-7xl mx-auto overflow-hidden">
@@ -36,10 +105,23 @@ export function StudyMaterialPage() {
             <BookOpen className="w-5 h-5 text-gray-400" />
             Library
           </h2>
-          <button className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-gray-300">
-            <Upload className="w-4 h-4" />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading || !user}
+            className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-gray-300 disabled:opacity-50"
+          >
+            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           </button>
         </div>
+
+        {/* Hidden file input */}
+        <input 
+          type="file" 
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="hidden" 
+          accept=".pdf,.docx,.txt"
+        />
 
         <div className="relative mt-2">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -108,35 +190,32 @@ export function StudyMaterialPage() {
               </div>
             </div>
 
-            {/* Mock Viewer Content */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar bg-[#0a0a0a] inset-shadow-sm">
-              <div className="max-w-3xl mx-auto">
-                <div className="aspect-[1/1.4] bg-[#111] rounded-xl border border-white/5 shadow-2xl p-12 relative overflow-hidden flex flex-col">
-                  {/* Decorative blur */}
-                  <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
-
-                  <div className="space-y-8 opacity-40 flex-1">
-                    <div className="h-10 w-3/4 bg-white/10 rounded-xl" />
-                    <div className="h-5 w-1/4 bg-white/5 rounded-md" />
-                    <div className="space-y-4 mt-16">
-                      <div className="h-4 w-full bg-white/5 rounded-md" />
-                      <div className="h-4 w-full bg-white/5 rounded-md" />
-                      <div className="h-4 w-[90%] bg-white/5 rounded-md" />
-                      <div className="h-4 w-full bg-white/5 rounded-md" />
-                      <div className="h-4 w-[85%] bg-white/5 rounded-md" />
+            {/* Actual Viewer Content */}
+            <div className="flex-1 p-0 md:p-6 bg-[#0a0a0a] inset-shadow-sm flex flex-col min-h-0">
+              <div className="flex-1 bg-[#111] md:rounded-xl overflow-hidden shadow-2xl relative border-none md:border md:border-white/5 flex flex-col min-h-0">
+                {selectedMaterial.type === 'PDF' ? (
+                  <PDFViewer key={selectedMaterial.id} url={selectedMaterial.url!} title={selectedMaterial.name} />
+                ) : selectedMaterial.type === 'TXT' ? (
+                  <TextViewer key={selectedMaterial.id} url={selectedMaterial.url!} title={selectedMaterial.name} />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-8">
+                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-8 shadow-inner border border-white/5">
+                      <FileIcon className="w-10 h-10 text-blue-400" />
                     </div>
-                    <div className="space-y-4 mt-10">
-                      <div className="h-4 w-full bg-white/5 rounded-md" />
-                      <div className="h-4 w-[95%] bg-white/5 rounded-md" />
-                      <div className="h-4 w-full bg-white/5 rounded-md" />
-                    </div>
+                    <h3 className="text-xl font-medium text-white mb-2">Document Preview Unavailable</h3>
+                    <p className="text-gray-400 mb-8 max-w-sm">This file format ({selectedMaterial.type}) cannot be previewed directly in the browser.</p>
+                    <a 
+                      href={selectedMaterial.url} 
+                      download={selectedMaterial.name}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium border border-white/10 flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download to view
+                    </a>
                   </div>
-
-                  <div className="mt-auto pt-10 flex items-center justify-between border-t border-white/5 opacity-50">
-                    <span className="text-xs text-white/50">Page 1 of 12</span>
-                    <FileIcon className="w-6 h-6 text-white/20" />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </>
@@ -149,9 +228,13 @@ export function StudyMaterialPage() {
             <p className="text-gray-500 max-w-md mb-10 leading-relaxed">
               Upload a PDF, DOCX, or TXT file to start reading. Your focus timer will remain visible while you study so you never lose track of time.
             </p>
-            <button className="flex items-center gap-3 px-8 py-4 bg-[#ededed] hover:bg-white text-black rounded-full font-semibold transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-105">
-              <Upload className="w-5 h-5" />
-              Upload Material
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || !user}
+              className="flex items-center gap-3 px-8 py-4 bg-[#ededed] hover:bg-white text-black rounded-full font-semibold transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+              {isUploading ? 'Uploading...' : 'Upload Material'}
             </button>
           </div>
         )}
