@@ -15,8 +15,25 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
         res.status(201).json({ user });
 
-    } catch (error) {
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+}
 
-        next(error);
+//Login a User
+export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            throw new Error("Email and password are required");
+        }
+
+        const user = await authServices.login({ email, password });
+
+        res.status(200).json({ user });
+
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
     }
 }

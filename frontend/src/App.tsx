@@ -2,21 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, RotateCcw, Settings, Coffee, Target, Zap, Pause, X, Maximize, Minimize } from 'lucide-react'
+import { Play, RotateCcw, Settings, Coffee, Target, Zap, Pause, X, Maximize, Minimize, UserCircle, LogOut } from 'lucide-react'
 
 import { SettingsModal, type TimerMode } from './components/SettingsModal'
+import { AuthModal } from './components/AuthModal'
+import { MinimizedTimer } from './components/MinimizedTimer'
+import { StudyMaterialPage } from './pages/StudyMaterialPage'
+import { formatTime } from './utils/time'
 
 const DEFAULT_TIMER_MODES: TimerMode[] = [
   { id: 'relaxed', label: 'RELAXED', time: '45:00', break: '15:00', timeInSeconds: 45 * 60, breakInSeconds: 15 * 60, icon: <Coffee className="w-5 h-5" /> },
   { id: 'standard', label: 'STANDARD', time: '25:00', break: '05:00', timeInSeconds: 25 * 60, breakInSeconds: 5 * 60, icon: <Target className="w-5 h-5" /> },
   { id: 'focused', label: 'LOCKED IN', time: '50:00', break: '10:00', timeInSeconds: 50 * 60, breakInSeconds: 10 * 60, icon: <Zap className="w-5 h-5" /> },
 ]
-
-function formatTime(seconds: number) {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-}
 
 function playTimerSound() {
   const AudioContext = window.AudioContext || (window as any).webkitAudioContext
@@ -58,6 +56,18 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(25 * 60)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState<'timer' | 'materials'>('timer')
+
+  const [user, setUser] = useState<any>(() => {
+    const saved = localStorage.getItem('pomodoroUser')
+    return saved ? JSON.parse(saved) : null
+  })
+
+  const handleLoginSuccess = (userData: any) => {
+    localStorage.setItem('pomodoroUser', JSON.stringify(userData))
+    setUser(userData)
+  }
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -139,16 +149,45 @@ function App() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-[#ededed] flex flex-col items-center justify-between py-12 px-6 font-sans overflow-hidden">
-      <header className={`w-full max-w-7xl flex justify-between items-center transition-opacity duration-500 relative z-10 mb-10 ${isActive ? 'opacity-0 pointer-events-none' : 'opacity-80'}`}>
+      <header className="w-full max-w-7xl flex justify-between items-center transition-opacity duration-500 relative z-50 mb-10 opacity-80">
         <h1 className="text-xs tracking-[0.4em] font-medium text-gray-500">
           FOCUS TIMER
         </h1>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              <span className="text-xs text-gray-400 tracking-wider">
+                {user.name || user.email}
+              </span>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('pomodoroUser')
+                  setUser(null)
+                }}
+                className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all text-gray-400 hover:text-red-400 border border-white/5"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all text-gray-400 hover:text-white border border-white/5"
+              title="Sign in"
+            >
+              <UserCircle className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="flex-1 w-full flex flex-col items-center justify-center -mt-12">
-        <motion.div layout transition={{ type: "spring", stiffness: 300, damping: 30 }} className={`relative flex items-center justify-center w-full max-w-5xl ${isActive ? 'h-0' : 'h-[500px]'} overflow-visible`}>
-          <AnimatePresence mode="popLayout">
-            {timerModes.map((mode) => {
+        {currentPage === 'timer' ? (
+          <>
+            <motion.div layout transition={{ type: "spring", stiffness: 300, damping: 30 }} className={`relative flex items-center justify-center w-full max-w-5xl ${isActive ? 'h-0' : 'h-[500px]'} overflow-visible`}>
+              <AnimatePresence mode="popLayout">
+                {timerModes.map((mode) => {
               const isSelected = selectedMode === mode.id
               if (isActive && !isSelected) return null
 
@@ -249,22 +288,67 @@ function App() {
                   <RotateCcw className="w-5 h-5" />
                 </button>
               </>
-            )}
-          </div>
-        </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        ) : (
+          <StudyMaterialPage />
+        )}
       </div>
 
-      <footer className={`w-full max-w-7xl flex justify-center transition-opacity duration-500 relative z-10 ${isActive ? 'opacity-0 pointer-events-none' : 'opacity-40'}`}>
-        <p className="text-[10px] tracking-widest">
-          DASHBOARD • MATERIALS • STATISTICS
-        </p>
+      <footer className="w-full max-w-7xl flex justify-center transition-opacity duration-500 relative z-50 opacity-80">
+        <div className="flex items-center gap-6 text-[10px] tracking-widest">
+          <button 
+            onClick={() => setCurrentPage('timer')}
+            className={`transition-colors hover:text-white ${currentPage === 'timer' ? 'text-white font-bold' : 'text-gray-500'}`}
+          >
+            DASHBOARD
+          </button>
+          <span className="text-gray-700">•</span>
+          <button 
+            onClick={() => setCurrentPage('materials')}
+            className={`transition-colors hover:text-white ${currentPage === 'materials' ? 'text-white font-bold' : 'text-gray-500'}`}
+          >
+            MATERIALS
+          </button>
+          <span className="text-gray-700">•</span>
+          <button className="text-gray-500 transition-colors hover:text-white cursor-not-allowed" title="Coming soon">
+            STATISTICS
+          </button>
+        </div>
       </footer>
+
+      {currentPage === 'materials' && isActive && (
+        <MinimizedTimer 
+          timerState={{
+            isActive,
+            isPaused,
+            isWorkSession,
+            timeLeft,
+            mode: timerModes.find(m => m.id === selectedMode)
+          }}
+          timerActions={{
+            handleStart,
+            handlePause,
+            handleResume,
+            handleFinish,
+            handleReset
+          }}
+        />
+      )}
 
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         timerModes={timerModes}
         onUpdateMode={handleUpdateModes}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </main>
   )
