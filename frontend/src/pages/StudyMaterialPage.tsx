@@ -190,9 +190,9 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
               </div>
             </div>
 
-            {/* Actual Viewer Content */}
-            <div className="flex-1 p-0 md:p-6 bg-[#0a0a0a] inset-shadow-sm flex flex-col min-h-0">
-              <div className="flex-1 bg-[#111] md:rounded-xl overflow-hidden shadow-2xl relative border-none md:border md:border-white/5 flex flex-col min-h-0">
+            {/* Actual Viewer Content — fills remaining space; PDFViewer fills this absolutely */}
+            <div className="flex-1 relative" style={{ minHeight: 0 }}>
+              <div style={{ position: 'absolute', inset: 0 }} className="bg-[#0a0a0a]">
                 {selectedMaterial.type === 'PDF' ? (
                   <PDFViewer key={selectedMaterial.id} url={selectedMaterial.url!} title={selectedMaterial.name} />
                 ) : selectedMaterial.type === 'TXT' ? (
@@ -204,8 +204,8 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
                     </div>
                     <h3 className="text-xl font-medium text-white mb-2">Document Preview Unavailable</h3>
                     <p className="text-gray-400 mb-8 max-w-sm">This file format ({selectedMaterial.type}) cannot be previewed directly in the browser.</p>
-                    <a 
-                      href={selectedMaterial.url} 
+                    <a
+                      href={selectedMaterial.url}
                       download={selectedMaterial.name}
                       target="_blank"
                       rel="noreferrer"

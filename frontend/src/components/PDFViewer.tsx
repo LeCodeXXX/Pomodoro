@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion } from 'framer-motion';
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Download, Maximize2, Minimize2 } from 'lucide-react';
-
 
 // Configure the worker for pdf.js
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -30,15 +29,78 @@ export function PDFViewer({ url, title }: PDFViewerProps) {
   const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
   const next = () => setPageNumber(prev => Math.min(prev + 1, numPages));
   const prev = () => setPageNumber(prev => Math.max(prev - 1, 1));
-
-  const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
+  const toggleFullscreen = () => setIsFullscreen(f => !f);
 
   return (
-    <div className={`flex flex-col bg-[#0a0a0a] rounded-xl overflow-hidden shadow-2xl border border-white/5 relative ${isFullscreen ? 'fixed inset-4 z-50' : 'w-full flex-1 min-h-0'}`}>
+    /*
+     * Outer shell — grows to fill the flex parent in StudyMaterialPage.
+     * position:relative is required so the absolutely-positioned scroll
+     * area can measure itself against this element.
+     */
+    <div
+      style={{ position: isFullscreen ? 'fixed' : 'relative', inset: isFullscreen ? '1rem' : undefined }}
+      className={`bg-[#0a0a0a] rounded-xl border border-white/5 shadow-2xl
+        ${isFullscreen ? 'z-50' : 'w-full h-full'}`}
+    >
+      {/*
+       * Scroll container — absolutely fills the outer shell so it is
+       * completely decoupled from any flex/grid ancestor and always
+       * has a real pixel height to scroll against.
+       */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          overflowY: 'auto',
+          overflowX: 'auto',
+          backgroundColor: '#111',
+          borderRadius: 'inherit',
+        }}
+        className="custom-scrollbar"
+      >
+        {/* Extra bottom padding so the floating toolbar never covers content */}
+        <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem 6rem' }}>
+          <Document
+            file={url}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={
+              <div className="flex items-center justify-center py-20">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                  <p className="text-gray-400 text-sm font-medium">Loading Document...</p>
+                </div>
+              </div>
+            }
+            error={
+              <div className="flex items-center justify-center py-20">
+                <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded-lg text-sm">Failed to load PDF.</p>
+              </div>
+            }
+          >
+            <motion.div
+              key={`page_${pageNumber}_${scale}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-sm overflow-hidden"
+            >
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="bg-white"
+              />
+            </motion.div>
+          </Document>
+        </div>
+      </div>
 
-      {/* Custom Control Bar */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-[#1a1a1a]/80 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-
+      {/* Floating Control Bar — sits above the scroll area */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2
+        bg-[#1a1a1a]/90 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10
+        shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
+        style={{ pointerEvents: 'auto' }}
+      >
         {/* Zoom Controls */}
         <div className="flex items-center gap-1 border-r border-white/10 pr-2">
           <button onClick={zoomOut} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors" title="Zoom Out">
@@ -51,7 +113,7 @@ export function PDFViewer({ url, title }: PDFViewerProps) {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex items-center gap-2 border-r border-white/10 pr-2 pl-2">
+        <div className="flex items-center gap-2 border-r border-white/10 px-2">
           <button
             onClick={prev}
             disabled={pageNumber <= 1}
@@ -80,43 +142,6 @@ export function PDFViewer({ url, title }: PDFViewerProps) {
             <Download className="w-4 h-4" />
           </a>
         </div>
-      </div>
-
-      {/* PDF Document Container */}
-      <div className="flex-1 overflow-auto custom-scrollbar relative flex justify-center bg-[#111] min-h-0">
-        <Document
-          file={url}
-          onLoadSuccess={onDocumentLoadSuccess}
-          className="flex flex-col items-center py-8"
-          loading={
-            <div className="flex items-center justify-center h-full w-full">
-              <div className="animate-pulse flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-gray-400 text-sm font-medium">Loading Document...</p>
-              </div>
-            </div>
-          }
-          error={
-            <div className="flex items-center justify-center h-full w-full">
-              <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded-lg text-sm">Failed to load PDF.</p>
-            </div>
-          }
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            key={`page_${pageNumber}_${scale}`}
-            className="shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-sm overflow-hidden"
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className="bg-white"
-            />
-          </motion.div>
-        </Document>
       </div>
     </div>
   );
