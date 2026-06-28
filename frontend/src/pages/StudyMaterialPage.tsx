@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Upload, Search, BookOpen, BrainCircuit, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
 import { PDFViewer } from '../components/PDFViewer';
 import { TextViewer } from '../components/TextViewer';
+import { LoadingScreen } from '../components/LoadingScreen';
+import { AlertModal } from '../components/AlertModal';
 
 interface Material {
   id: string;
@@ -22,6 +24,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const fetchMaterials = async () => {
     if (!user) return;
@@ -83,17 +86,31 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           setSelectedMaterial(newMaterial);
         } else {
           console.error('Upload failed:', data.error);
+          setUploadError(data.error || 'Failed to upload document. Please try again.');
         }
       } catch (error) {
         console.error('Failed to upload material:', error);
+        setUploadError('A network error occurred while uploading. Please try again.');
       } finally {
         setIsUploading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     }
   };
 
   return (
-    <div className="w-full h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 p-6 max-w-7xl mx-auto overflow-hidden">
+    <>
+      <AlertModal 
+        isOpen={!!uploadError} 
+        onClose={() => setUploadError(null)} 
+        title="Upload Failed" 
+        message={uploadError || ''} 
+      />
+      <div className="w-full h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 p-6 max-w-7xl mx-auto overflow-hidden relative">
+        <LoadingScreen isLoading={isUploading} message="Uploading and processing your document..." fullScreen={true} />
+      
       {/* Sidebar - Materials Library */}
       <motion.div
         initial={{ x: -20, opacity: 0 }}
@@ -240,5 +257,6 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
         )}
       </motion.div>
     </div>
+    </>
   );
 }

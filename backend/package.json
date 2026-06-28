@@ -16,6 +16,8 @@
     "@types/multer": "^2.1.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "docx-pdf": "^0.0.1",
+    "docx-pdf-converter": "^1.2.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "multer": "^2.2.0"
