@@ -1,8 +1,8 @@
 import requests
 import time
 import subprocess
-import os
 import sys
+import json
 
 def main():
     # Start the FastAPI server in the background
@@ -35,7 +35,30 @@ def main():
             doc_res = requests.post("http://localhost:8000/api/documents/process", files=files, data=data)
             
         print(f"Status Code: {doc_res.status_code}")
-        print(f"Response: {doc_res.json()}")
+        doc_data = doc_res.json()
+        print(f"Response: {doc_data}")
+        
+        if doc_res.status_code == 200:
+            print("\n--- Testing Quiz Generation ---")
+            quiz_req = {
+                "document_id": doc_data["document_id"],
+                "extracted_content": doc_data["content"]["raw_text"],
+                "quiz_config": {
+                    "difficulty": "easy",
+                    "question_type": "multiple_choice",
+                    "num_questions": 2,
+                    "quiz_label": "Test"
+                },
+                "user_id": "test_user"
+            }
+            quiz_res = requests.post("http://localhost:8000/api/quiz/generate", json=quiz_req)
+            print(f"Status Code: {quiz_res.status_code}")
+            try:
+                quiz_data = quiz_res.json()
+                # Print nicely formatted JSON to verify the structure
+                print(f"Response: {json.dumps(quiz_data, indent=2)}")
+            except Exception as e:
+                print(f"Failed to parse quiz response: {quiz_res.text}")
         
     finally:
         print("\nShutting down server...")

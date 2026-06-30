@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from app.config import settings
-from app.routes import documents, health
+from app.routes import documents, health, quiz
 
 logging.basicConfig(level=settings.log_level.upper())
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ app.add_middleware(
 # Routes
 app.include_router(health.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
+app.include_router(quiz.router, prefix="/api")
 
 @app.on_event("startup")
 async def startup():
