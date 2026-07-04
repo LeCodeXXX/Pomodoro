@@ -5,6 +5,7 @@ import { AuthRequest } from "../middleware/authMiddleware";
 import { prisma } from "../lib/prisma";
 import * as documentServices from "../services/documentServices";
 import aiService from "../services/aiService";
+import * as quizAttemptServices from "../services/quizAttemptServices";
 
 function formatErrorDetails(error: any): string {
     if (!error) {
@@ -267,6 +268,70 @@ export const getQuizzesByDocument = async (
         console.error("[Quiz] Failed to fetch quizzes by document:", error);
         res.status(500).json({
             error: error.message || "Failed to fetch quizzes",
+        });
+    }
+};
+
+export const saveQuizAttempt = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.userId!;
+        const { quizId: rawQuizId } = req.params;
+        const { responses = {} } = req.body;
+
+        if (!rawQuizId || Array.isArray(rawQuizId)) {
+            res.status(400).json({ error: "quizId is required" });
+            return;
+        }
+
+        const quizId = rawQuizId;
+
+        const attempt = await quizAttemptServices.recordQuizAttempt({
+            quizId,
+            userId,
+            responses,
+        });
+
+        res.status(201).json({
+            attempt,
+        });
+    } catch (error: any) {
+        console.error("[Quiz] Failed to save quiz attempt:", error);
+        res.status(500).json({
+            error: error.message || "Failed to save quiz attempt",
+        });
+    }
+};
+
+export const getQuizAttempts = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.userId!;
+        const { quizId: rawQuizId } = req.params;
+
+        if (!rawQuizId || Array.isArray(rawQuizId)) {
+            res.status(400).json({ error: "quizId is required" });
+            return;
+        }
+
+        const quizId = rawQuizId;
+
+        const result = await quizAttemptServices.getQuizAttemptsSummary({
+            quizId,
+            userId,
+        });
+
+        res.status(200).json(result);
+    } catch (error: any) {
+        console.error("[Quiz] Failed to load quiz attempts:", error);
+        res.status(500).json({
+            error: error.message || "Failed to load quiz attempts",
         });
     }
 };

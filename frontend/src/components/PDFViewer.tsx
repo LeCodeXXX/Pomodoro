@@ -40,7 +40,7 @@ export function PDFViewer({ url, title }: PDFViewerProps) {
     <div
       style={{ position: isFullscreen ? 'fixed' : 'relative', inset: isFullscreen ? 0 : undefined }}
       className={`bg-[#0a0a0a] border-white/5 shadow-2xl
-        ${isFullscreen ? 'z-[9999] rounded-none border-0' : 'w-full h-full rounded-xl border'}`}
+        ${isFullscreen ? 'z-9999 rounded-none border-0' : 'w-full h-full rounded-xl border'}`}
     >
       {/*
        * Scroll container — absolutely fills the outer shell so it is

@@ -254,6 +254,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
         isOpen={isQuizOpen}
         onClose={() => setIsQuizOpen(false)}
         quiz={quizResult}
+        userId={user?.id}
       />
       <QuizHistoryModal
         isOpen={isQuizHistoryOpen}

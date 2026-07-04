@@ -25,4 +25,16 @@ router.get(
     quizControllers.getQuizzesByDocument
 );
 
+router.post(
+    "/quiz/:quizId/attempts",
+    requireAuth,
+    quizControllers.saveQuizAttempt
+);
+
+router.get(
+    "/quiz/:quizId/attempts",
+    requireAuth,
+    quizControllers.getQuizAttempts
+);
+
 export default router;

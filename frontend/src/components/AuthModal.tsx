@@ -60,7 +60,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+        <div className="fixed inset-0 z-200 flex items-center justify-center">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -76,7 +76,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="relative w-full max-w-md bg-[#141414] border border-white/10 p-8 sm:p-10 rounded-[24px] shadow-2xl mx-4"
+            className="relative w-full max-w-md bg-[#141414] border border-white/10 p-8 sm:p-10 rounded-3xl shadow-2xl mx-4"
           >
             {/* Close button */}
             <button

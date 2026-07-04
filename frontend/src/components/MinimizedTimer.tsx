@@ -40,7 +40,7 @@ export function MinimizedTimer({ timerState, timerActions }: MinimizedTimerProps
               <div className={`absolute w-full h-full rounded-full animate-ping opacity-50 ${isWorkSession ? 'bg-green-500' : 'bg-blue-500'}`} />
             )}
           </div>
-          <div className="flex flex-col min-w-[70px]">
+          <div className="flex flex-col min-w-17.5">
             <span className="text-[9px] text-gray-500 font-bold tracking-widest uppercase">
               {isActive ? (isWorkSession ? 'Focus' : 'Break') : 'Idle'}
             </span>

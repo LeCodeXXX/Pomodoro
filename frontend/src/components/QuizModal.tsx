@@ -6,14 +6,7 @@ interface QuizModalProps {
   isOpen: boolean
   onClose: () => void
   quiz: any
-}
-
-function formatLabel(value?: string) {
-  if (!value) return 'Unknown'
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
+  userId?: string
 }
 
 function normalizeQuizPayload(quiz: any) {
@@ -21,6 +14,7 @@ function normalizeQuizPayload(quiz: any) {
   const questions = quizData?.questions || quiz?.questions || []
 
   return {
+    id: quizData?.id || quiz?.id || '',
     title: quizData?.title || 'Generated Quiz',
     label: quizData?.label || '',
     difficulty: quizData?.difficulty || '',
@@ -46,15 +40,29 @@ function normalizeText(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
-export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
+export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
   const quizData = normalizeQuizPayload(quiz)
   const [responses, setResponses] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [isSavingAttempt, setIsSavingAttempt] = useState(false)
+  const [attemptsOpen, setAttemptsOpen] = useState(false)
+  const [isLoadingAttempts, setIsLoadingAttempts] = useState(false)
+  const [attemptsError, setAttemptsError] = useState('')
+  const [attemptSummary, setAttemptSummary] = useState<any>(null)
+  const [attempts, setAttempts] = useState<any[]>([])
+  const [savedAttempt, setSavedAttempt] = useState<any>(null)
 
   useEffect(() => {
     if (isOpen) {
       setResponses({})
       setSubmitted(false)
+      setIsSavingAttempt(false)
+      setAttemptsOpen(false)
+      setIsLoadingAttempts(false)
+      setAttemptsError('')
+      setAttemptSummary(null)
+      setAttempts([])
+      setSavedAttempt(null)
     }
   }, [isOpen, quiz])
 
@@ -79,8 +87,78 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
     }, 0)
   }, [quizData.questions, quizData.questionType, responses])
 
-  const submitQuiz = () => {
+  const loadAttempts = async () => {
+    if (!quizData.id) {
+      setAttemptsError('This quiz must be saved before attempts can be viewed.')
+      return
+    }
+
+    if (!quiz?.userId && !userId) {
+      setAttemptsError('Sign in to view quiz attempts.')
+      return
+    }
+
+    setAttemptsOpen(true)
+    setIsLoadingAttempts(true)
+    setAttemptsError('')
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/quiz/${quizData.id}/attempts`, {
+        headers: {
+          'x-user-id': userId || quiz?.userId,
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load quiz attempts.')
+      }
+
+      setAttemptSummary(data.summary)
+      setAttempts(data.attempts || [])
+    } catch (error: any) {
+      setAttemptsError(error.message || 'Failed to load quiz attempts.')
+    } finally {
+      setIsLoadingAttempts(false)
+    }
+  }
+
+  const submitQuiz = async () => {
     setSubmitted(true)
+
+    if (!quizData.id || (!userId && !quiz?.userId)) {
+      return
+    }
+
+    setIsSavingAttempt(true)
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/quiz/${quizData.id}/attempts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId || quiz?.userId,
+        },
+        body: JSON.stringify({ responses }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save quiz attempt.')
+      }
+
+      setSavedAttempt(data.attempt)
+
+      if (attemptsOpen) {
+        await loadAttempts()
+      }
+    } catch (error) {
+      console.error('Failed to save quiz attempt:', error)
+    } finally {
+      setIsSavingAttempt(false)
+    }
   }
 
   return (
@@ -124,7 +202,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
             </div>
 
             <div className="max-h-[calc(88vh-76px)] overflow-y-auto custom-scrollbar px-5 py-5 sm:px-6">
-                
+
               {quizData.warnings?.length ? (
                 <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
                   <p className="font-medium text-amber-200">Generation notes</p>
@@ -274,7 +352,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
                 })}
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-white/8 bg-white/3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-[11px] uppercase text-gray-500">Progress</p>
                   <p className="mt-2 text-sm text-gray-200">
@@ -289,19 +367,124 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
 
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setResponses({})}
+                    onClick={() => {setResponses({}); setSubmitted(false);}}
                     className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     Reset
                   </button>
                   <button
-                    onClick={submitQuiz}
-                    className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-5 py-2.5 text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20"
+                    onClick={() => {
+                      if (attemptsOpen) {
+                        setAttemptsOpen(false)
+                        return
+                      }
+
+                      loadAttempts()
+                    }}
+                    className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
                   >
-                    Check Answers
+                    {attemptsOpen ? 'Hide Attempts' : 'View Attempts'}
+                  </button>
+                  <button
+                    onClick={submitQuiz}
+                    disabled={isSavingAttempt}
+                    className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-5 py-2.5 text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSavingAttempt ? 'Saving...' : 'Check Answers'}
                   </button>
                 </div>
               </div>
+
+              <AnimatePresence>
+                {attemptsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-4 rounded-2xl border border-white/8 bg-[#151515] p-4 sm:p-5"
+                  >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-500">Quiz attempts</p>
+                        <h4 className="mt-2 text-base font-medium text-white">Performance summary</h4>
+                      </div>
+                      {savedAttempt ? (
+                        <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-200">
+                          Latest attempt saved
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {isLoadingAttempts ? (
+                      <p className="mt-4 text-sm text-gray-400">Loading attempts...</p>
+                    ) : attemptsError ? (
+                      <p className="mt-4 text-sm text-red-300">{attemptsError}</p>
+                    ) : (
+                      <>
+                        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                            <p className="text-[11px] uppercase text-gray-500">Attempts</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">{attemptSummary?.totalAttempts ?? 0}</p>
+                          </div>
+                          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                            <p className="text-[11px] uppercase text-gray-500">Best score</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">
+                              {attemptSummary ? `${attemptSummary.bestScore ?? 0} / ${attemptSummary.totalQuestions ?? totalQuestions}` : `0 / ${totalQuestions}`}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                            <p className="text-[11px] uppercase text-gray-500">Average score</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">
+                              {attemptSummary ? `${Number(attemptSummary.averageScore ?? 0).toFixed(1)} / ${attemptSummary.totalQuestions ?? totalQuestions}` : `0 / ${totalQuestions}`}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                            <p className="text-[11px] uppercase text-gray-500">Average accuracy</p>
+                            <p className="mt-2 text-2xl font-semibold text-white">
+                              {attemptSummary ? `${Math.round((attemptSummary.averageAccuracy ?? 0) * 100)}%` : '0%'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          {attempts.length ? attempts.map((attempt: any, index: number) => (
+                            <div key={attempt.id} className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-medium text-white">Attempt {index + 1}</p>
+                                  <p className="mt-1 text-xs uppercase tracking-wider text-gray-500">
+                                    Completed {new Date(attempt.completedAt).toLocaleString()}
+                                  </p>
+                                </div>
+                                <p className="text-sm font-semibold text-emerald-300">
+                                  {attempt.score} / {attempt.totalQuestions}
+                                </p>
+                              </div>
+
+                              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2 text-sm text-gray-300">
+                                  Correct: {attempt.answers?.filter((answer: any) => answer.isCorrect).length || 0}
+                                </div>
+                                <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2 text-sm text-gray-300">
+                                  Wrong: {(attempt.answers?.length || 0) - (attempt.answers?.filter((answer: any) => answer.isCorrect).length || 0)}
+                                </div>
+                                <div className="rounded-xl border border-white/8 bg-black/20 px-3 py-2 text-sm text-gray-300">
+                                  Accuracy: {Math.round((attempt.score / (attempt.totalQuestions || totalQuestions || 1)) * 100)}%
+                                </div>
+                              </div>
+                            </div>
+                          )) : (
+                            <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-5 text-sm text-gray-400">
+                              No attempts recorded yet. Press Check Answers to save the first one.
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
