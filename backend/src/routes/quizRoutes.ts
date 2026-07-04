@@ -19,4 +19,10 @@ router.post(
     quizControllers.generateQuiz
 );
 
+router.get(
+    "/quiz/document/:documentId",
+    requireAuth,
+    quizControllers.getQuizzesByDocument
+);
+
 export default router;

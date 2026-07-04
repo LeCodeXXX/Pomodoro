@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Search, BookOpen, BrainCircuit, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
+import { Upload, Search, BookOpen, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
 import { PDFViewer } from '../components/PDFViewer';
 import { TextViewer } from '../components/TextViewer';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { AlertModal } from '../components/AlertModal';
+import { QuizModal } from '../components/QuizModal';
+import { QuizSetupModal, type QuizSettings } from '../components/QuizSetupModal';
+import { QuizHistoryModal } from '../components/QuizHistoryModal';
 
 interface Material {
   id: string;
@@ -13,6 +16,18 @@ interface Material {
   dateAdded: string;
   size?: string;
   url?: string;
+}
+
+interface SavedQuiz {
+  id: string;
+  title: string;
+  label: string;
+  difficulty: string;
+  questionType: string;
+  totalQuestions: number;
+  createdAt: string;
+  questions: any[];
+  metadata?: any;
 }
 
 interface StudyMaterialPageProps {
@@ -25,6 +40,15 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [quizError, setQuizError] = useState<string | null>(null);
+  const [quizResult, setQuizResult] = useState<any>(null);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isQuizSetupOpen, setIsQuizSetupOpen] = useState(false);
+  const [isQuizHistoryOpen, setIsQuizHistoryOpen] = useState(false);
+  const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
+  const [isLoadingSavedQuizzes, setIsLoadingSavedQuizzes] = useState(false);
+  const [savedQuizError, setSavedQuizError] = useState<string | null>(null);
 
   const fetchMaterials = async () => {
     if (!user) return;
@@ -53,9 +77,115 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
     fetchMaterials();
   }, [user]);
 
+  useEffect(() => {
+    const loadSavedQuizzes = async () => {
+      if (!user || !selectedMaterial || !isQuizHistoryOpen) {
+        return;
+      }
+
+      setIsLoadingSavedQuizzes(true);
+      setSavedQuizError(null);
+
+      try {
+        const response = await fetch(`http://localhost:3000/api/quiz/document/${selectedMaterial.id}`, {
+          headers: { 'x-user-id': user.id },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load saved quizzes.');
+        }
+
+        setSavedQuizzes(data.quizzes || []);
+      } catch (error: any) {
+        console.error('Failed to fetch saved quizzes:', error);
+        setSavedQuizError(error.message || 'Failed to load saved quizzes.');
+      } finally {
+        setIsLoadingSavedQuizzes(false);
+      }
+    };
+
+    loadSavedQuizzes();
+  }, [isQuizHistoryOpen, selectedMaterial, user]);
+
   const filteredMaterials = materials.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenQuizSetup = () => {
+    if (!user) {
+      setQuizError('Please sign in before generating a quiz.');
+      return;
+    }
+
+    if (!selectedMaterial) {
+      setQuizError('Select a study material before generating a quiz.');
+      return;
+    }
+
+    setIsQuizSetupOpen(true);
+  };
+
+  const handleOpenQuizHistory = () => {
+    if (!user) {
+      setQuizError('Please sign in before opening quiz history.');
+      return;
+    }
+
+    if (!selectedMaterial) {
+      setQuizError('Select a study material before opening quiz history.');
+      return;
+    }
+
+    setIsQuizHistoryOpen(true);
+  };
+
+  const handleSelectSavedQuiz = (quiz: SavedQuiz) => {
+    setIsQuizHistoryOpen(false);
+    setQuizResult(quiz);
+    setIsQuizOpen(true);
+  };
+
+  const handleGenerateQuiz = async (settings: QuizSettings) => {
+    if (!user || !selectedMaterial) {
+      setQuizError('Select a study material before generating a quiz.');
+      return;
+    }
+
+    setIsQuizSetupOpen(false);
+    setIsGeneratingQuiz(true);
+    setQuizError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('documentId', selectedMaterial.id);
+      formData.append('difficulty', settings.difficulty);
+      formData.append('questionType', settings.questionType);
+      formData.append('numQuestions', String(settings.numQuestions));
+      formData.append('quizLabel', settings.quizLabel || selectedMaterial.name);
+
+      const response = await fetch('http://localhost:3000/api/quiz/generate', {
+        method: 'POST',
+        headers: { 'x-user-id': user.id },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to generate quiz.');
+      }
+
+      setQuizResult(data);
+      setIsQuizOpen(true);
+    } catch (error: any) {
+      console.error('Failed to generate quiz:', error);
+      setQuizError(error.message || 'Failed to generate quiz. Please try again.');
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,8 +238,39 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
         title="Upload Failed" 
         message={uploadError || ''} 
       />
+      <AlertModal
+        isOpen={!!quizError}
+        onClose={() => setQuizError(null)}
+        title="Quiz Generation Failed"
+        message={quizError || ''}
+      />
+      <QuizSetupModal
+        isOpen={isQuizSetupOpen}
+        onClose={() => setIsQuizSetupOpen(false)}
+        onGenerate={handleGenerateQuiz}
+        defaultLabel={selectedMaterial?.name || 'Study Quiz'}
+      />
+      <QuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        quiz={quizResult}
+      />
+      <QuizHistoryModal
+        isOpen={isQuizHistoryOpen}
+        onClose={() => setIsQuizHistoryOpen(false)}
+        materialName={selectedMaterial?.name || 'Study material'}
+        quizzes={savedQuizzes}
+        isLoading={isLoadingSavedQuizzes}
+        error={savedQuizError}
+        onSelectQuiz={handleSelectSavedQuiz}
+        onGenerateNewQuiz={() => {
+          setIsQuizHistoryOpen(false);
+          handleOpenQuizSetup();
+        }}
+      />
       <div className="w-full h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 p-6 max-w-7xl mx-auto overflow-hidden relative">
         <LoadingScreen isLoading={isUploading} message="Uploading and processing your document..." fullScreen={true} />
+        <LoadingScreen isLoading={isGeneratingQuiz} message="Generating your quiz..." fullScreen={true} />
       
       {/* Sidebar - Materials Library */}
       <motion.div
@@ -193,15 +354,23 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
                   <X className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3 text-sm text-gray-400">
-                  <span className="truncate max-w-[200px] sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
+                  <span className="truncate max-w-50 sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
-                  <BrainCircuit className="w-4 h-4" />
-                  <span className="hidden sm:inline">GENERATE QUIZ</span>
+                <button
+                  onClick={handleOpenQuizSetup}
+                  disabled={!selectedMaterial || isGeneratingQuiz}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="hidden sm:inline">{isGeneratingQuiz ? 'GENERATING...' : 'GENERATE QUIZ'}</span>
                 </button>
-                <button className="p-2 hover:bg-white/10 rounded-full text-gray-400 transition-colors">
+                <button
+                  onClick={handleOpenQuizHistory}
+                  disabled={!selectedMaterial}
+                  className="p-2 hover:bg-white/10 rounded-full text-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Open saved quizzes"
+                >
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
@@ -237,7 +406,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-transparent to-[#0a0a0a]/50">
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-linear-to-b from-transparent to-[#0a0a0a]/50">
             <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-8 shadow-inner border border-white/5">
               <BookOpen className="w-10 h-10 text-gray-500" />
             </div>

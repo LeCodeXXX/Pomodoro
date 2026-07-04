@@ -1,8 +1,31 @@
 import { Response, NextFunction } from "express";
+import fs from "fs";
 import path from "path";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { prisma } from "../lib/prisma";
+import * as documentServices from "../services/documentServices";
 import aiService from "../services/aiService";
+
+function formatErrorDetails(error: any): string {
+    if (!error) {
+        return "Unknown error";
+    }
+
+    if (typeof error === "string") {
+        return error;
+    }
+
+    const responseDetails = error.response?.data;
+    if (typeof responseDetails === "string") {
+        return responseDetails;
+    }
+
+    if (responseDetails && typeof responseDetails === "object") {
+        return responseDetails.detail || responseDetails.error || JSON.stringify(responseDetails);
+    }
+
+    return error.message || error.code || error.toString?.() || "Unknown error";
+}
 
 /**
  * Generate a quiz from an uploaded document.
@@ -24,11 +47,6 @@ export const generateQuiz = async (
         const { difficulty, questionType, numQuestions, quizLabel, documentId } = req.body;
         const file = req.file;
 
-        if (!file) {
-            res.status(400).json({ error: "No file uploaded" });
-            return;
-        }
-
         // Validate required quiz config fields
         if (!difficulty || !questionType || !numQuestions || !quizLabel) {
             res.status(400).json({
@@ -37,29 +55,49 @@ export const generateQuiz = async (
             return;
         }
 
+        let filePath = file?.path;
+        let originalFilename = file?.originalname;
+        let title = (quizLabel as string) || "Quiz";
+
+        if (!filePath) {
+            if (!documentId) {
+                res.status(400).json({ error: "Provide either an uploaded file or a documentId" });
+                return;
+            }
+
+            const document = await documentServices.getDocumentById(documentId, userId);
+            filePath = path.join(process.cwd(), document.fileUrl);
+            originalFilename = path.basename(document.fileUrl);
+            title = (quizLabel as string) || document.title;
+
+            if (!fs.existsSync(filePath)) {
+                res.status(404).json({ error: "Source document file was not found on disk" });
+                return;
+            }
+        }
+
         // Determine the original file extension from the stored file on disk.
         // The upload middleware may have converted DOCX → PDF, so we derive
         // the type from the actual file that exists.
-        const fileExt = path.extname(file.filename).replace(".", "").toLowerCase();
-        const title =
-            (quizLabel as string) ||
-            path.basename(file.originalname, path.extname(file.originalname));
+        const safeTitle =
+            title || path.basename(originalFilename || "quiz", path.extname(originalFilename || ""));
 
         // ── Step 1: Extract text via the AI service ────────────────────────
-        console.log(`[Quiz] Step 1: Sending file for extraction — ${file.filename}`);
+        console.log(`[Quiz] Step 1: Sending file for extraction — ${path.basename(filePath)}`);
         let docResult;
         try {
             docResult = await aiService.processDocument(
-                file.path,
-                file.originalname,
+                filePath,
+                originalFilename || path.basename(filePath),
                 userId,
-                title
+                safeTitle
             );
         } catch (err: any) {
-            console.error("[Quiz] Document extraction failed:", err.message);
+            const details = formatErrorDetails(err);
+            console.error("[Quiz] Document extraction failed:", details);
             res.status(500).json({
                 error: "Failed to extract text from document",
-                details: err.response?.data || err.message,
+                details,
             });
             return;
         }
@@ -104,10 +142,11 @@ export const generateQuiz = async (
                 userId
             );
         } catch (err: any) {
-            console.error("[Quiz] Quiz generation failed:", err.message);
+            const details = formatErrorDetails(err);
+            console.error("[Quiz] Quiz generation failed:", details);
             res.status(500).json({
                 error: "Failed to generate quiz",
-                details: err.response?.data || err.message,
+                details,
             });
             return;
         }
@@ -172,6 +211,62 @@ export const generateQuiz = async (
         console.error("[Quiz] Unexpected error:", error);
         res.status(500).json({
             error: error.message || "Failed to generate quiz",
+        });
+    }
+};
+
+/**
+ * Retrieve all quizzes generated for a given document.
+ * Returns newest-first with questions and options included so the frontend
+ * can reopen past quizzes without calling the AI service again.
+ */
+export const getQuizzesByDocument = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const userId = req.userId!;
+        const { documentId: rawDocumentId } = req.params;
+
+        if (Array.isArray(rawDocumentId)) {
+            res.status(400).json({ error: "documentId must be a single value" });
+            return;
+        }
+
+        const documentId = rawDocumentId;
+
+        if (!documentId) {
+            res.status(400).json({ error: "documentId is required" });
+            return;
+        }
+
+        await documentServices.getDocumentById(documentId, userId);
+
+        const quizzes = await prisma.quiz.findMany({
+            where: {
+                documentId,
+                userId,
+            },
+            include: {
+                questions: {
+                    include: {
+                        options: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        res.status(200).json({
+            quizzes,
+        });
+    } catch (error: any) {
+        console.error("[Quiz] Failed to fetch quizzes by document:", error);
+        res.status(500).json({
+            error: error.message || "Failed to fetch quizzes",
         });
     }
 };
