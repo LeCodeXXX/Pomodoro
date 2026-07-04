@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BrainCircuit, ChevronRight, Clock3, Loader2, X } from 'lucide-react';
+import { ChevronRight, Clock3, Loader2, X } from 'lucide-react';
 
 interface QuizHistoryModalProps {
   isOpen: boolean;
@@ -43,15 +43,10 @@ export function QuizHistoryModal({
         transition={{ duration: 0.22, ease: 'easeOut' }}
         className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
       >
-        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-indigo-500 via-cyan-400 to-emerald-400" />
-
         <div className="flex items-start justify-between gap-4 border-b border-white/5 px-5 py-4 sm:px-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-gray-500">Saved quizzes</p>
+            <p className="text-[11px] uppercase text-gray-500">Saved quizzes for : </p>
             <h2 className="mt-2 text-lg font-medium text-white sm:text-xl">{materialName}</h2>
-            <p className="mt-1 text-sm text-gray-400">
-              Reopen any past quiz and retry it without generating a new one.
-            </p>
           </div>
           <button
             onClick={onClose}
@@ -73,9 +68,6 @@ export function QuizHistoryModal({
             </div>
           ) : quizzes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-gray-400">
-                <BrainCircuit className="h-7 w-7" />
-              </div>
               <h3 className="mt-4 text-lg font-medium text-white">No saved quizzes yet</h3>
               <p className="mt-2 max-w-md text-sm text-gray-400">
                 Generate one quiz for this document, then you can retry it from here anytime.
@@ -93,29 +85,24 @@ export function QuizHistoryModal({
                 <button
                   key={quiz.id}
                   onClick={() => onSelectQuiz(quiz)}
-                  className="w-full rounded-3xl border border-white/8 bg-[#171717] p-4 text-left transition-colors hover:border-white/15 hover:bg-white/5"
+                  className="w-full rounded-2xl border border-white/8 bg-[#171717] p-4 text-left transition-colors hover:border-white/15 hover:bg-white/5"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-200">
-                          {quiz.label || quiz.title}
-                        </span>
-                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-gray-400">
-                          {quiz.questionType}
-                        </span>
-                      </div>
-                      <h3 className="mt-3 truncate text-base font-medium text-white">{quiz.title}</h3>
+                      <h3 className="truncate text-[14px] font-medium text-white">{quiz.title}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-400">
                         <span className="inline-flex items-center gap-1.5">
-                          <Clock3 className="h-3.5 w-3.5 text-cyan-300" />
+                          <Clock3 className="h-3.5 w-3.5" />
                           {new Date(quiz.createdAt).toLocaleString()}
                         </span>
                         <span>{quiz.totalQuestions} questions</span>
                         <span>{quiz.difficulty}</span>
+                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase text-gray-400">
+                          {quiz.questionType}
+                        </span>
                       </div>
                     </div>
-                    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300">
+                    <div className=" flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300">
                       <ChevronRight className="h-4 w-4" />
                     </div>
                   </div>

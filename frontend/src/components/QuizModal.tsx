@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BrainCircuit, CheckCircle2, ChevronDown, Clock3, Hash, Sparkles, X } from 'lucide-react'
+import { CheckCircle2, ChevronDown, X } from 'lucide-react'
 
 interface QuizModalProps {
   isOpen: boolean
@@ -102,18 +102,14 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
             transition={{ duration: 0.28, ease: 'easeOut' }}
             className="relative w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
           >
-            <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-indigo-500 via-cyan-400 to-emerald-400" />
 
             <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4 sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.14)]">
-                  <BrainCircuit className="h-5 w-5" />
-                </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-medium tracking-wide text-[#ededed] sm:text-xl">
+                  <h2 className="truncate text-lg font-medium text-[#ededed] sm:text-xl">
                     {quizData.title}
                   </h2>
-                  <p className="mt-1 text-[11px] uppercase tracking-[0.28em] text-gray-500">
+                  <p className="mt-1 text-[11px] uppercase text-gray-500">
                     Generated quiz preview
                   </p>
                 </div>
@@ -128,39 +124,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
             </div>
 
             <div className="max-h-[calc(88vh-76px)] overflow-y-auto custom-scrollbar px-5 py-5 sm:px-6">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-gray-500">
-                    <Hash className="h-4 w-4 text-indigo-300" />
-                    Questions
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold text-white">{quizData.totalQuestions}</p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-gray-500">
-                    <Sparkles className="h-4 w-4 text-cyan-300" />
-                    Difficulty
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold text-white">{formatLabel(quizData.difficulty)}</p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-gray-500">
-                    <BrainCircuit className="h-4 w-4 text-emerald-300" />
-                    Type
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold text-white">{formatLabel(quizData.questionType)}</p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-gray-500">
-                    <Clock3 className="h-4 w-4 text-amber-300" />
-                    Provider
-                  </div>
-                  <p className="mt-3 text-2xl font-semibold text-white">
-                    {formatLabel(quizData.metadata?.provider || 'Gemini')}
-                  </p>
-                </div>
-              </div>
-
+                
               {quizData.warnings?.length ? (
                 <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
                   <p className="font-medium text-amber-200">Generation notes</p>
@@ -197,16 +161,13 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.22, delay: index * 0.03 }}
-                    className="overflow-hidden rounded-3xl border border-white/8 bg-[#171717] shadow-[0_12px_40px_rgba(0,0,0,0.22)]"
+                    className="overflow-hidden rounded-2xl border border-white/8 bg-[#171717] shadow-[0_12px_40px_rgba(0,0,0,0.22)]"
                   >
                     <div className="flex items-start justify-between gap-4 border-b border-white/5 px-5 py-4 sm:px-6">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-200">
+                          <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase text-indigo-200">
                             Question {index + 1}
-                          </span>
-                          <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-gray-400">
-                            {formatLabel(question.type || quizData.questionType)}
                           </span>
                         </div>
                         <h3 className="mt-4 text-base font-medium leading-relaxed text-white sm:text-lg">
@@ -262,11 +223,11 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm leading-relaxed text-gray-200">{option.text}</p>
                                   {submitted && correct ? (
-                                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                                    <p className="mt-1 text-[11px] font-semibold uppercase text-emerald-300">
                                       Correct answer
                                     </p>
                                   ) : submitted && selected && !correct ? (
-                                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-red-300">
+                                    <p className="mt-1 text-[11px] font-semibold uppercase text-red-300">
                                       Your choice
                                     </p>
                                   ) : null}
@@ -277,7 +238,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
                         </div>
                       ) : (
                         <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                          <p className="text-[11px] uppercase tracking-[0.22em] text-gray-500">Answer</p>
+                          <p className="text-[11px] uppercase text-gray-500">Answer</p>
                           <input
                             value={selectedAnswer}
                             onChange={(event) => !submitted && setResponses((current) => ({ ...current, [questionKey]: event.target.value }))}
@@ -286,7 +247,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
                             placeholder="Type your answer"
                           />
                           <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-gray-500">After submit</p>
+                            <p className="text-[11px] uppercase text-gray-500">After submit</p>
                             <p className={`mt-2 text-sm ${submitted && answeredCorrectly ? 'text-emerald-300' : 'text-gray-200'}`}>
                               {submitted
                                 ? answeredCorrectly
@@ -300,7 +261,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
 
                       {submitted && question.explanation ? (
                         <div className="mt-4 rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-4">
-                          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-cyan-200/80">
+                          <div className="flex items-center gap-2 text-[11px] uppercase text-cyan-200/80">
                             <ChevronDown className="h-4 w-4" />
                             Explanation
                           </div>
@@ -315,7 +276,7 @@ export function QuizModal({ isOpen, onClose, quiz }: QuizModalProps) {
 
               <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-white/8 bg-white/3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-gray-500">Progress</p>
+                  <p className="text-[11px] uppercase text-gray-500">Progress</p>
                   <p className="mt-2 text-sm text-gray-200">
                     {Object.keys(responses).length} / {totalQuestions} answered
                   </p>
