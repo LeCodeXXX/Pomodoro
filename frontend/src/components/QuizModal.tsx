@@ -41,6 +41,84 @@ function normalizeText(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+function getIdentificationWordGroups(value: string) {
+  const groups: string[][] = []
+  let currentGroup: string[] = []
+
+  for (const character of Array.from(value)) {
+    if (/\s/.test(character)) {
+      if (currentGroup.length) {
+        groups.push(currentGroup)
+        currentGroup = []
+      }
+
+      continue
+    }
+
+    currentGroup.push(character)
+  }
+
+  if (currentGroup.length) {
+    groups.push(currentGroup)
+  }
+
+  return groups
+}
+
+function IdentificationAnswerField({
+  value,
+  onChange,
+  correctAnswer,
+  disabled,
+}: {
+  value: string
+  onChange: (nextValue: string) => void
+  correctAnswer: string
+  disabled: boolean
+}) {
+  const wordGroups = getIdentificationWordGroups(correctAnswer)
+  const typedCharacters = Array.from(value).filter((character) => !/\s/.test(character))
+  let characterCursor = 0
+
+  return (
+    <div className="relative mt-3 rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-4">
+      <div className="flex min-h-12 flex-wrap items-end gap-4" aria-hidden="true">
+        {wordGroups.map((group, groupIndex) => (
+          <div key={`${groupIndex}-${group.length}`} className="flex items-end gap-1.5">
+            {group.map((_, slotIndex) => {
+              const typedCharacter = typedCharacters[characterCursor++] || ''
+              const isFilled = typedCharacter.length > 0
+
+              return (
+                <div
+                  key={`${groupIndex}-${slotIndex}`}
+                  className={`flex h-8 w-3 items-end justify-center border-b-2 px-1 pb-1 text-sm font-semibold uppercase tracking-wide transition-colors sm:w-10 ${
+                    isFilled
+                      ? 'border-indigo-300/70 text-white'
+                      : 'border-white/15 text-transparent'
+                  }`}
+                >
+                  {typedCharacter || '_'}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        aria-label="Identification answer"
+        autoComplete="off"
+        spellCheck={false}
+        className="absolute inset-0 h-full w-full cursor-text bg-transparent px-4 py-4 text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
+      />
+    </div>
+  )
+}
+
 export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
   const quizData = normalizeQuizPayload(quiz)
   const [responses, setResponses] = useState<Record<string, string>>({})
@@ -281,12 +359,11 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                       ) : (
                         <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
                           <p className="text-[11px] uppercase text-gray-500">Answer</p>
-                          <input
+                          <IdentificationAnswerField
                             value={selectedAnswer}
-                            onChange={(event) => !submitted && setResponses((current) => ({ ...current, [questionKey]: event.target.value }))}
+                            onChange={(nextValue) => !submitted && setResponses((current) => ({ ...current, [questionKey]: nextValue }))}
+                            correctAnswer={String(correctAnswer || '')}
                             disabled={submitted}
-                            className="mt-3 w-full rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-70"
-                            placeholder="Type your answer"
                           />
                           <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
                             <p className="text-[11px] uppercase text-gray-500">After submit</p>
