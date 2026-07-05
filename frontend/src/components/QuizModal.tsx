@@ -41,6 +41,19 @@ function normalizeText(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
+function shuffleArray<T>(items: T[]) {
+  const shuffled = [...items]
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    const currentItem = shuffled[index]
+    shuffled[index] = shuffled[swapIndex]
+    shuffled[swapIndex] = currentItem
+  }
+
+  return shuffled
+}
+
 function getIdentificationWordGroups(value: string) {
   const groups: string[][] = []
   let currentGroup: string[] = []
@@ -119,25 +132,59 @@ function IdentificationAnswerField({
   )
 }
 
+type DisplayQuestion = {
+  key: string
+  question: any
+  options: any[]
+}
+
+function buildDisplayQuestions(questions: any[]) {
+  return shuffleArray(
+    questions.map((question: any, originalIndex: number) => {
+      const options = Array.isArray(question.options) ? question.options : []
+      const questionType = (question.type || '').toLowerCase()
+      const shouldShuffleOptions = options.length > 1 && questionType !== 'identification'
+
+      return {
+        key: question.id || `question-${originalIndex}`,
+        question,
+        options: shouldShuffleOptions ? shuffleArray(options) : options,
+      }
+    }),
+  )
+}
+
 export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
   const quizData = normalizeQuizPayload(quiz)
   const [responses, setResponses] = useState<Record<string, string>>({})
+  const [displayQuestions, setDisplayQuestions] = useState<DisplayQuestion[]>([])
   const [submitted, setSubmitted] = useState(false)
   const [isSavingAttempt, setIsSavingAttempt] = useState(false)
   const [isAttemptsModalOpen, setIsAttemptsModalOpen] = useState(false)
   const [attemptRefreshToken, setAttemptRefreshToken] = useState(0)
 
+  const resetQuizView = () => {
+    setResponses({})
+    setSubmitted(false)
+    setIsSavingAttempt(false)
+    setIsAttemptsModalOpen(false)
+    setAttemptRefreshToken(0)
+    setDisplayQuestions(buildDisplayQuestions(quizData.questions))
+  }
+
   useEffect(() => {
     if (isOpen) {
-      setResponses({})
-      setSubmitted(false)
-      setIsSavingAttempt(false)
-      setIsAttemptsModalOpen(false)
-      setAttemptRefreshToken(0)
+      resetQuizView()
     }
   }, [isOpen, quiz])
 
-  const totalQuestions = quizData.questions.length
+  useEffect(() => {
+    if (isOpen) {
+      setDisplayQuestions(buildDisplayQuestions(quizData.questions))
+    }
+  }, [isOpen, quizData.questions])
+
+  const totalQuestions = displayQuestions.length || quizData.questions.length
 
   const score = useMemo(() => {
     return quizData.questions.reduce((runningScore: number, question: any, index: number) => {
@@ -257,16 +304,15 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
               ) : null}
 
               <div className="mt-6 space-y-4">
-                {quizData.questions.map((question: any, index: number) => {
-                  const options = question.options?.map((option: any) => ({
+                {displayQuestions.map(({ key: questionKey, question, options }, index: number) => {
+                  const normalizedOptions = options.map((option: any) => ({
                     id: option.id,
                     text: option.text ?? option.optionText ?? '',
                     is_correct: option.is_correct ?? option.isCorrect,
-                  })) || []
+                  }))
 
                   const correctAnswer = question.correct_answer ?? question.answer
 
-                  const questionKey = question.id || String(index)
                   const selectedAnswer = responses[questionKey] || ''
                   const questionType = (question.type || quizData.questionType || '').toLowerCase()
                   const answeredCorrectly = submitted
@@ -297,9 +343,9 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                     </div>
 
                     <div className="px-5 py-5 sm:px-6">
-                      {options.length ? (
+                      {normalizedOptions.length ? (
                         <div className="grid gap-3 md:grid-cols-2">
-                          {options.map((option: any, optionIndex: number) => {
+                          {normalizedOptions.map((option: any, optionIndex: number) => {
                             const correct = isCorrectOption(option, question)
                             const selected = selectedAnswer === option.id
                             return (
@@ -408,7 +454,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
 
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => {setResponses({}); setSubmitted(false);}}
+                    onClick={resetQuizView}
                     className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     Reset
