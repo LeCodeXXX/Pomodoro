@@ -97,7 +97,7 @@ export function QuizSetupModal({ isOpen, onClose, onGenerate, defaultLabel }: Qu
                 <textarea
                   value={settings.focusTopics}
                   onChange={(e) => setSettings((current) => ({ ...current, focusTopics: e.target.value }))}
-                  className="min-h-[96px] w-full resize-none rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-white/25 placeholder:text-xs placeholder:italic"
+                  className="min-h-24 w-full resize-none rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-white/25 placeholder:text-xs placeholder:italic"
                   placeholder="For example: emphasize quantum computing, pointers, and exam-style concepts professors usually repeat"
                 />
                 <p className="text-[11px] leading-5 text-gray-500">
