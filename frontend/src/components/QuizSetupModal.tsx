@@ -7,6 +7,7 @@ export interface QuizSettings {
   questionType: 'MULTIPLE_CHOICE' | 'IDENTIFICATION'
   numQuestions: number
   quizLabel: string
+  focusTopics: string
 }
 
 interface QuizSetupModalProps {
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: QuizSettings = {
   questionType: 'MULTIPLE_CHOICE',
   numQuestions: 5,
   quizLabel: '',
+  focusTopics: '',
 }
 
 export function QuizSetupModal({ isOpen, onClose, onGenerate, defaultLabel }: QuizSetupModalProps) {
@@ -39,6 +41,7 @@ export function QuizSetupModal({ isOpen, onClose, onGenerate, defaultLabel }: Qu
     onGenerate({
       ...settings,
       quizLabel: settings.quizLabel.trim() || defaultLabel,
+      focusTopics: settings.focusTopics.trim(),
     })
   }
 
@@ -87,6 +90,19 @@ export function QuizSetupModal({ isOpen, onClose, onGenerate, defaultLabel }: Qu
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-white/25"
                   placeholder="My study quiz"
                 />
+              </label>
+
+              <label className="block space-y-2">
+                <span className="text-[11px] uppercase text-gray-500">Focus topics (optional)</span>
+                <textarea
+                  value={settings.focusTopics}
+                  onChange={(e) => setSettings((current) => ({ ...current, focusTopics: e.target.value }))}
+                  className="min-h-[96px] w-full resize-none rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-white/25 placeholder:text-xs placeholder:italic"
+                  placeholder="For example: emphasize quantum computing, pointers, and exam-style concepts professors usually repeat"
+                />
+                <p className="text-[11px] leading-5 text-gray-500">
+                  Optional. Use this to guide the quiz toward topics that matter most for your exam.
+                </p>
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">

@@ -33,6 +33,7 @@ class QuizConfig(BaseModel):
     question_type: QuestionType
     num_questions: int = Field(..., ge=1, le=50)
     quiz_label: str
+    focus_topics: Optional[str] = None
 
 class QuizGenerationRequest(BaseModel):
     document_id: str

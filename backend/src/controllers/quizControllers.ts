@@ -45,7 +45,7 @@ export const generateQuiz = async (
 ): Promise<void> => {
     try {
         const userId = req.userId!;
-        const { difficulty, questionType, numQuestions, quizLabel, documentId } = req.body;
+        const { difficulty, questionType, numQuestions, quizLabel, documentId, focusTopics } = req.body;
         const file = req.file;
 
         // Validate required quiz config fields
@@ -139,6 +139,7 @@ export const generateQuiz = async (
                     question_type: aiQuestionType,
                     num_questions: parseInt(numQuestions, 10),
                     quiz_label: quizLabel,
+                    focus_topics: typeof focusTopics === "string" ? focusTopics.trim() : "",
                 },
                 userId
             );

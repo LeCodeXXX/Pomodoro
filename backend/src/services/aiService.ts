@@ -52,6 +52,7 @@ class AIService {
             question_type: string;
             num_questions: number;
             quiz_label: string;
+            focus_topics?: string;
         },
         userId: string
     ) {

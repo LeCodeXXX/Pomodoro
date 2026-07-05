@@ -164,6 +164,9 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       formData.append('questionType', settings.questionType);
       formData.append('numQuestions', String(settings.numQuestions));
       formData.append('quizLabel', settings.quizLabel || selectedMaterial.name);
+      if (settings.focusTopics.trim()) {
+        formData.append('focusTopics', settings.focusTopics.trim());
+      }
 
       const response = await fetch('http://localhost:3000/api/quiz/generate', {
         method: 'POST',

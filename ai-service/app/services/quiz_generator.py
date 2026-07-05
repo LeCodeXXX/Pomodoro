@@ -45,6 +45,7 @@ class QuizGenerator:
     DIFFICULTY_PROMPTS = {
         "easy": """Generate {num_questions} EASY {question_type} questions about the following text.
 Focus on: Basic facts and definitions, simple recall, straightforward concepts.
+  {focus_section}
 
 Text:
 {content}
@@ -54,6 +55,7 @@ Return ONLY valid JSON matching this exact format, with no markdown formatting o
         
         "medium": """Generate {num_questions} MEDIUM DIFFICULTY {question_type} questions about the following text.
 Requirements: Test conceptual understanding, require some analysis, not just simple recall.
+      {focus_section}
 
 Text:
 {content}
@@ -63,6 +65,7 @@ Return ONLY valid JSON matching this exact format, with no markdown formatting o
         
         "hard": """Generate {num_questions} HARD {question_type} questions about the following text.
 Requirements: Deep understanding, critical thinking, analysis and synthesis.
+      {focus_section}
 
 Text:
 {content}
@@ -82,18 +85,26 @@ Return ONLY valid JSON matching this exact format, with no markdown formatting o
             q_type = request.quiz_config.question_type.value
             difficulty = request.quiz_config.difficulty.value
             num_q = request.quiz_config.num_questions
+            focus_topics = (request.quiz_config.focus_topics or "").strip()
             
             format_spec = self.FORMAT_TEMPLATES.get(q_type, self.FORMAT_TEMPLATES["multiple_choice"])
             prompt_template = self.DIFFICULTY_PROMPTS.get(difficulty, self.DIFFICULTY_PROMPTS["medium"])
             
             # Limit the content to around ~15000 chars just to be safe if the chunk is huge
             content = request.extracted_content[:15000]
+            focus_section = ""
+            if focus_topics:
+                focus_section = (
+                    "\nSpecial focus requested: "
+                    f"Prioritize these topics and exam patterns when possible: {focus_topics}"
+                )
             
             prompt = prompt_template.format(
                 num_questions=num_q,
                 question_type=q_type,
                 content=content,
-                format_spec=format_spec
+              format_spec=format_spec,
+              focus_section=focus_section,
             )
             
             logger.info(f"Generating quiz {quiz_id} with Gemini. Config: {num_q} {difficulty} {q_type} questions.")
@@ -124,6 +135,7 @@ Return ONLY valid JSON matching this exact format, with no markdown formatting o
                 "quiz": {
                     "title": f"{request.quiz_config.quiz_label} Quiz",
                     "label": request.quiz_config.quiz_label,
+                    "focus_topics": focus_topics,
                     "difficulty": difficulty,
                     "question_type": q_type,
                     "total_questions": len(questions),
