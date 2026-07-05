@@ -39,6 +39,21 @@ class QuizGenerator:
               "explanation": "Explanation..."
             }
           ]
+        }""",
+        "true_false": """{
+          "questions": [
+            {
+              "id": "q1",
+              "question": "A statement about the text that is either true or false.",
+              "type": "true_false",
+              "options": [
+                {"id": "opt_true", "text": "True", "is_correct": true},
+                {"id": "opt_false", "text": "False", "is_correct": false}
+              ],
+              "correct_answer": "opt_true",
+              "explanation": "Explanation of why the statement is true or false..."
+            }
+          ]
         }"""
     }
     

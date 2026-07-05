@@ -10,6 +10,7 @@ class DifficultyLevel(str, Enum):
 class QuestionType(str, Enum):
     MULTIPLE_CHOICE = "multiple_choice"
     IDENTIFICATION = "identification"
+    TRUE_FALSE = "true_false"
 
 # Document Processing
 class DocumentProcessRequest(BaseModel):
@@ -60,6 +61,14 @@ class IdentificationQuestion(BaseModel):
     type: str = "identification"
     correct_answer: str
     acceptable_answers: List[str]
+    explanation: str
+
+class TrueFalseQuestion(BaseModel):
+    id: str
+    question: str
+    type: str = "true_false"
+    options: List[QuestionOption]
+    correct_answer: str
     explanation: str
 
 class QuizGenerationResponse(BaseModel):

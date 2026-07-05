@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 
 export interface QuizSettings {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD'
-  questionType: 'MULTIPLE_CHOICE' | 'IDENTIFICATION'
+  questionType: 'MULTIPLE_CHOICE' | 'IDENTIFICATION' | 'TRUE_FALSE'
   numQuestions: number
   quizLabel: string
   focusTopics: string
@@ -132,6 +132,7 @@ export function QuizSetupModal({ isOpen, onClose, onGenerate, defaultLabel }: Qu
                   >
                     <option value="MULTIPLE_CHOICE">Multiple choice</option>
                     <option value="IDENTIFICATION">Identification</option>
+                    <option value="TRUE_FALSE">True / False</option>
                   </select>
                 </label>
               </div>

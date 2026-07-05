@@ -120,6 +120,7 @@ export const generateQuiz = async (
         const questionTypeMap: Record<string, string> = {
             MULTIPLE_CHOICE: "multiple_choice",
             IDENTIFICATION: "identification",
+            TRUE_FALSE: "true_false",
         };
 
         const aiDifficulty = difficultyMap[difficulty] || difficulty.toLowerCase();
@@ -167,7 +168,7 @@ export const generateQuiz = async (
 
         // Map difficulty/questionType to Prisma enum values
         const prismaDifficulty = difficulty as "EASY" | "MEDIUM" | "HARD";
-        const prismaQuestionType = questionType as "MULTIPLE_CHOICE" | "IDENTIFICATION";
+        const prismaQuestionType = questionType as "MULTIPLE_CHOICE" | "IDENTIFICATION" | "TRUE_FALSE";
 
         const savedQuiz = await prisma.quiz.create({
             data: {

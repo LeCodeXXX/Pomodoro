@@ -23,6 +23,7 @@ enum Difficulty {
 enum QuestionType {
   MULTIPLE_CHOICE
   IDENTIFICATION
+  TRUE_FALSE
 }
 
 model User {

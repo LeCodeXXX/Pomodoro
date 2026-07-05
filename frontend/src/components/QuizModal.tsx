@@ -138,17 +138,34 @@ type DisplayQuestion = {
   options: any[]
 }
 
-function buildDisplayQuestions(questions: any[]) {
+function buildDisplayQuestions(questions: any[], quizQuestionType?: string) {
   return shuffleArray(
     questions.map((question: any, originalIndex: number) => {
       const options = Array.isArray(question.options) ? question.options : []
-      const questionType = (question.type || '').toLowerCase()
-      const shouldShuffleOptions = options.length > 1 && questionType !== 'identification'
+      const questionType = (question.type || quizQuestionType || '').toLowerCase()
+      const shouldShuffleOptions =
+        options.length > 1 &&
+        questionType !== 'identification' &&
+        questionType !== 'true_false'
+
+      let finalOptions = shouldShuffleOptions ? shuffleArray(options) : options
+
+      if (questionType === 'true_false') {
+        finalOptions = [...options].sort((a, b) => {
+          const aText = (a.text ?? a.optionText ?? '').toLowerCase().trim()
+          const bText = (b.text ?? b.optionText ?? '').toLowerCase().trim()
+          if (aText === 'true') return -1
+          if (bText === 'true') return 1
+          if (aText === 'false') return 1
+          if (bText === 'false') return -1
+          return 0
+        })
+      }
 
       return {
         key: question.id || `question-${originalIndex}`,
         question,
-        options: shouldShuffleOptions ? shuffleArray(options) : options,
+        options: finalOptions,
       }
     }),
   )
@@ -169,7 +186,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
     setIsSavingAttempt(false)
     setIsAttemptsModalOpen(false)
     setAttemptRefreshToken(0)
-    setDisplayQuestions(buildDisplayQuestions(quizData.questions))
+    setDisplayQuestions(buildDisplayQuestions(quizData.questions, quizData.questionType))
   }
 
   useEffect(() => {
@@ -180,9 +197,9 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      setDisplayQuestions(buildDisplayQuestions(quizData.questions))
+      setDisplayQuestions(buildDisplayQuestions(quizData.questions, quizData.questionType))
     }
-  }, [isOpen, quizData.questions])
+  }, [isOpen, quizData.questions, quizData.questionType])
 
   const totalQuestions = displayQuestions.length || quizData.questions.length
 
@@ -199,6 +216,15 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
         return normalizeText(selectedAnswer) === normalizeText(String(correctAnswer))
           ? runningScore + 1
           : runningScore
+      }
+
+      const opts = question.options || []
+      const selectedOption = opts.find((opt: any) => opt.id === selectedAnswer)
+      if (selectedOption) {
+        const isCorrect = selectedOption.is_correct ?? selectedOption.isCorrect
+        if (typeof isCorrect === 'boolean') {
+          return isCorrect ? runningScore + 1 : runningScore
+        }
       }
 
       return selectedAnswer === correctAnswer ? runningScore + 1 : runningScore
@@ -315,11 +341,17 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
 
                   const selectedAnswer = responses[questionKey] || ''
                   const questionType = (question.type || quizData.questionType || '').toLowerCase()
-                  const answeredCorrectly = submitted
-                    ? (questionType === 'identification'
-                        ? normalizeText(selectedAnswer) === normalizeText(String(correctAnswer || ''))
-                        : selectedAnswer === correctAnswer)
-                    : false
+                  const isCorrectAnswerSelected = () => {
+                    if (questionType === 'identification') {
+                      return normalizeText(selectedAnswer) === normalizeText(String(correctAnswer || ''))
+                    }
+                    const selectedOption = normalizedOptions.find((opt: any) => opt.id === selectedAnswer)
+                    if (selectedOption) {
+                      return !!selectedOption.is_correct
+                    }
+                    return selectedAnswer === correctAnswer
+                  }
+                  const answeredCorrectly = submitted ? isCorrectAnswerSelected() : false
 
                   return (
                   <motion.section
