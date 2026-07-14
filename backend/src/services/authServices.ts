@@ -30,6 +30,12 @@ export const createAccount = async ({ name, email, password }: { name: string, e
         id: pushUser.id,
         name: pushUser.name,
         email: pushUser.auth!.email,
+        relaxedWorkTime: pushUser.relaxedWorkTime,
+        relaxedBreakTime: pushUser.relaxedBreakTime,
+        standardWorkTime: pushUser.standardWorkTime,
+        standardBreakTime: pushUser.standardBreakTime,
+        focusedWorkTime: pushUser.focusedWorkTime,
+        focusedBreakTime: pushUser.focusedBreakTime,
     };
 }
 
@@ -55,5 +61,11 @@ export const login = async ({ email, password }: { email: string, password: stri
         id: existingAuth.user.id,
         name: existingAuth.user.name,
         email: existingAuth.email,
+        relaxedWorkTime: existingAuth.user.relaxedWorkTime,
+        relaxedBreakTime: existingAuth.user.relaxedBreakTime,
+        standardWorkTime: existingAuth.user.standardWorkTime,
+        standardBreakTime: existingAuth.user.standardBreakTime,
+        focusedWorkTime: existingAuth.user.focusedWorkTime,
+        focusedBreakTime: existingAuth.user.focusedBreakTime,
     };
 }

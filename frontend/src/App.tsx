@@ -65,6 +65,86 @@ function App() {
   }
 
   useEffect(() => {
+    if (user) {
+      setTimerModes([
+        {
+          id: 'relaxed',
+          label: 'RELAXED',
+          time: `${Math.floor((user.relaxedWorkTime || 45 * 60) / 60).toString().padStart(2, '0')}:00`,
+          break: `${Math.floor((user.relaxedBreakTime || 15 * 60) / 60).toString().padStart(2, '0')}:00`,
+          timeInSeconds: user.relaxedWorkTime || 45 * 60,
+          breakInSeconds: user.relaxedBreakTime || 15 * 60,
+          icon: <Coffee className="w-5 h-5" />
+        },
+        {
+          id: 'standard',
+          label: 'STANDARD',
+          time: `${Math.floor((user.standardWorkTime || 25 * 60) / 60).toString().padStart(2, '0')}:00`,
+          break: `${Math.floor((user.standardBreakTime || 5 * 60) / 60).toString().padStart(2, '0')}:00`,
+          timeInSeconds: user.standardWorkTime || 25 * 60,
+          breakInSeconds: user.standardBreakTime || 5 * 60,
+          icon: <Target className="w-5 h-5" />
+        },
+        {
+          id: 'focused',
+          label: 'LOCKED IN',
+          time: `${Math.floor((user.focusedWorkTime || 50 * 60) / 60).toString().padStart(2, '0')}:00`,
+          break: `${Math.floor((user.focusedBreakTime || 10 * 60) / 60).toString().padStart(2, '0')}:00`,
+          timeInSeconds: user.focusedWorkTime || 50 * 60,
+          breakInSeconds: user.focusedBreakTime || 10 * 60,
+          icon: <Zap className="w-5 h-5" />
+        },
+      ])
+    } else {
+      setTimerModes(DEFAULT_TIMER_MODES)
+    }
+  }, [user])
+
+  const handleUpdateModes = async (newModes: TimerMode[]) => {
+    setTimerModes(newModes)
+
+    if (user) {
+      const relaxed = newModes.find((m) => m.id === 'relaxed')
+      const standard = newModes.find((m) => m.id === 'standard')
+      const focused = newModes.find((m) => m.id === 'focused')
+
+      const body = {
+        relaxedWorkTime: relaxed?.timeInSeconds || 45 * 60,
+        relaxedBreakTime: relaxed?.breakInSeconds || 15 * 60,
+        standardWorkTime: standard?.timeInSeconds || 25 * 60,
+        standardBreakTime: standard?.breakInSeconds || 5 * 60,
+        focusedWorkTime: focused?.timeInSeconds || 50 * 60,
+        focusedBreakTime: focused?.breakInSeconds || 10 * 60,
+      }
+
+      try {
+        const res = await fetch('http://localhost:3000/api/users/timer-settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user.id,
+          },
+          body: JSON.stringify(body),
+        })
+
+        if (!res.ok) {
+          throw new Error('Failed to update timer settings')
+        }
+
+        const updatedSettings = await res.json()
+        const updatedUser = {
+          ...user,
+          ...updatedSettings,
+        }
+        localStorage.setItem('pomodoroUser', JSON.stringify(updatedUser))
+        setUser(updatedUser)
+      } catch (error) {
+        console.error('Error saving timer settings:', error)
+      }
+    }
+  }
+
+  useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
     }
@@ -181,7 +261,7 @@ function App() {
             onToggleFullscreen={toggleFullscreen}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onCloseSettings={() => setIsSettingsOpen(false)}
-            onUpdateModes={setTimerModes}
+            onUpdateModes={handleUpdateModes}
           />
         ) : (
           <StudyMaterialPage user={user} />

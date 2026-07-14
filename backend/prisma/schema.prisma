@@ -27,14 +27,20 @@ enum QuestionType {
 }
 
 model User {
-  id        String @id @default(uuid())
-  name      String?
-  createdAt DateTime @default(now())
-  auth      Auth?
-  documents Document[]
-  quizzes   Quiz[]
-  attempts  QuizAttempt[]
-  sessions  PomodoroSession[]
+  id                String @id @default(uuid())
+  name              String?
+  createdAt         DateTime @default(now())
+  auth              Auth?
+  documents         Document[]
+  quizzes           Quiz[]
+  attempts          QuizAttempt[]
+  sessions          PomodoroSession[]
+  relaxedWorkTime   Int @default(2700)
+  relaxedBreakTime  Int @default(900)
+  standardWorkTime  Int @default(1500)
+  standardBreakTime Int @default(300)
+  focusedWorkTime   Int @default(3000)
+  focusedBreakTime  Int @default(600)
 }
 
 model Auth {
