@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Coffee, Target, Zap, UserCircle, LogOut } from 'lucide-react'
 
 import { type TimerMode } from './components/SettingsModal'
@@ -6,6 +6,7 @@ import { AuthModal } from './components/AuthModal'
 import { MinimizedTimer } from './components/MinimizedTimer'
 import { MainTimerPage } from './pages/MainTimerPage'
 import { StudyMaterialPage } from './pages/StudyMaterialPage'
+import { StatsPage } from './pages/StatsPage'
 
 const DEFAULT_TIMER_MODES: TimerMode[] = [
   { id: 'relaxed', label: 'RELAXED', time: '45:00', break: '15:00', timeInSeconds: 45 * 60, breakInSeconds: 15 * 60, icon: <Coffee className="w-5 h-5" /> },
@@ -52,12 +53,28 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isAuthOpen, setIsAuthOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState<'timer' | 'materials'>('timer')
+  const [currentPage, setCurrentPage] = useState<'timer' | 'materials' | 'stats'>('timer')
+  const [stats, setStats] = useState<any>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
 
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('pomodoroUser')
     return saved ? JSON.parse(saved) : null
   })
+
+  const fetchStats = useCallback(async (userId: string) => {
+    setStatsLoading(true)
+    try {
+      const res = await fetch('http://localhost:3000/api/users/stats', {
+        headers: { 'x-user-id': userId },
+      })
+      if (res.ok) setStats(await res.json())
+    } catch (e) {
+      console.error('Error fetching stats:', e)
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [])
 
   const handleLoginSuccess = (userData: any) => {
     localStorage.setItem('pomodoroUser', JSON.stringify(userData))
@@ -98,7 +115,8 @@ function App() {
     } else {
       setTimerModes(DEFAULT_TIMER_MODES)
     }
-  }, [user])
+    if (user) fetchStats(user.id)
+  }, [user, fetchStats])
 
   const handleUpdateModes = async (newModes: TimerMode[]) => {
     setTimerModes(newModes)
@@ -144,6 +162,22 @@ function App() {
     }
   }
 
+  const recordSession = async (duration: number, completed: boolean) => {
+    if (!user) return;
+    try {
+      await fetch('http://localhost:3000/api/users/pomodoro-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({ duration, completed }),
+      });
+    } catch (error) {
+      console.error('Error recording session:', error);
+    }
+  };
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -172,6 +206,7 @@ function App() {
       if (mode) {
         playTimerSound()
         if (isWorkSession) {
+          recordSession(mode.timeInSeconds, true)
           setIsWorkSession(false)
           setTimeLeft(mode.breakInSeconds)
         } else {
@@ -193,7 +228,13 @@ function App() {
     setIsPaused(false)
     setIsWorkSession(true)
     const mode = timerModes.find((m) => m.id === selectedMode)
-    if (mode) setTimeLeft(mode.timeInSeconds)
+    if (mode) {
+      if (isWorkSession) {
+        const duration = mode.timeInSeconds - timeLeft
+        if (duration > 0) recordSession(duration, false)
+      }
+      setTimeLeft(mode.timeInSeconds)
+    }
   }
 
   const handleReset = () => {
@@ -263,8 +304,10 @@ function App() {
             onCloseSettings={() => setIsSettingsOpen(false)}
             onUpdateModes={handleUpdateModes}
           />
-        ) : (
+        ) : currentPage === 'materials' ? (
           <StudyMaterialPage user={user} />
+        ) : (
+          <StatsPage user={user} stats={stats} statsLoading={statsLoading} />
         )}
       </div>
 
@@ -285,14 +328,17 @@ function App() {
             MATERIALS
           </button>
           <span className="text-gray-700">•</span>
-          <button className="text-gray-500 transition-colors hover:text-white cursor-not-allowed" title="Coming soon">
+          <button
+            onClick={() => { if (!user) { setIsAuthOpen(true) } else { setCurrentPage('stats') } }}
+            className={`transition-colors hover:text-white ${currentPage === 'stats' ? 'text-white font-bold' : 'text-gray-500'}`}
+          >
             STATISTICS
           </button>
         </div>
       </footer>
 
-      {/* Minimized Timer overlay on Materials page */}
-      {currentPage === 'materials' && isActive && (
+      {/* Minimized Timer overlay on other pages */}
+      {currentPage !== 'timer' && isActive && (
         <MinimizedTimer
           timerState={{ isActive, isPaused, isWorkSession, timeLeft, mode: timerModes.find((m) => m.id === selectedMode) }}
           timerActions={{ handleStart, handlePause, handleResume, handleFinish, handleReset }}

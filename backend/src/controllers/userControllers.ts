@@ -57,3 +57,56 @@ export const updateTimerSettings = async (req: AuthRequest, res: Response, next:
         res.status(400).json({ error: error.message });
     }
 };
+
+export const getUserStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            throw new Error("Unauthorized");
+        }
+
+        const stats = await userServices.getUserStats(userId);
+        res.status(200).json(stats);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+export const recordPomodoroSession = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            throw new Error("Unauthorized");
+        }
+
+        const { duration, completed } = req.body;
+
+        if (duration === undefined || completed === undefined) {
+            throw new Error("Missing required session fields");
+        }
+
+        const session = await userServices.recordPomodoroSession(userId, Number(duration), Boolean(completed));
+        res.status(201).json(session);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+export const getChartData = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            throw new Error("Unauthorized");
+        }
+
+        const filter = (req.query.filter as string) || 'weekly';
+        if (!['daily', 'weekly', 'monthly'].includes(filter)) {
+            throw new Error("Invalid filter. Must be daily, weekly, or monthly.");
+        }
+
+        const data = await userServices.getChartData(userId, filter as 'daily' | 'weekly' | 'monthly');
+        res.status(200).json(data);
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
+};

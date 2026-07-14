@@ -46,3 +46,116 @@ export const updateTimerSettings = async (
 
     return updatedUser;
 };
+
+export const getUserStats = async (userId: string) => {
+    const [pomodoroSessions, documentsCount, quizAttempts] = await Promise.all([
+        prisma.pomodoroSession.findMany({ where: { userId } }),
+        prisma.document.count({ where: { userId } }),
+        prisma.quizAttempt.findMany({ where: { userId } }),
+    ]);
+
+    const totalPomodoroSessions = pomodoroSessions.filter(s => s.completed).length;
+    const totalFocusTime = pomodoroSessions.reduce((acc, curr) => acc + curr.duration, 0);
+    
+    const totalQuizzesTaken = quizAttempts.length;
+    const averageQuizScore = totalQuizzesTaken > 0 
+        ? Math.round(quizAttempts.reduce((acc, curr) => acc + (curr.score / curr.totalQuestions), 0) / totalQuizzesTaken * 100)
+        : 0;
+
+    return {
+        totalPomodoroSessions,
+        totalFocusTime,
+        documentsCount,
+        totalQuizzesTaken,
+        averageQuizScore
+    };
+};
+
+export const recordPomodoroSession = async (userId: string, duration: number, completed: boolean) => {
+    const session = await prisma.pomodoroSession.create({
+        data: {
+            duration,
+            completed,
+            userId
+        }
+    });
+    return session;
+};
+
+type ChartFilter = 'daily' | 'weekly' | 'monthly';
+
+export const getChartData = async (userId: string, filter: ChartFilter) => {
+    const now = new Date();
+    let startDate: Date;
+
+    if (filter === 'daily') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    } else if (filter === 'weekly') {
+        const day = now.getDay(); // 0=Sun, 1=Mon...
+        const diff = (day === 0 ? -6 : 1 - day); // offset to Monday
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff, 0, 0, 0);
+    } else {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    }
+
+    const sessions = await prisma.pomodoroSession.findMany({
+        where: {
+            userId,
+            completed: true,
+            createdAt: { gte: startDate },
+        },
+        orderBy: { createdAt: 'asc' },
+    });
+
+    // ---- Weekly Productivity (always Mon-Sun buckets for the selected period) ----
+    const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weeklyMap: Record<string, { focusTime: number; sessions: number }> = {};
+    DAYS.forEach(d => { weeklyMap[d] = { focusTime: 0, sessions: 0 }; });
+
+    sessions.forEach(s => {
+        const jsDay = new Date(s.createdAt).getDay(); // 0=Sun
+        const dayIdx = jsDay === 0 ? 6 : jsDay - 1;   // remap to Mon=0
+        const key = DAYS[dayIdx];
+        weeklyMap[key].focusTime += s.duration;
+        weeklyMap[key].sessions += 1;
+    });
+
+    const weeklyProductivity = DAYS.map(d => ({ day: d, ...weeklyMap[d] }));
+
+    // ---- Study Time Trend ----
+    let studyTimeTrend: { label: string; focusTime: number }[] = [];
+
+    if (filter === 'daily') {
+        const hourMap: Record<number, number> = {};
+        for (let h = 0; h < 24; h++) hourMap[h] = 0;
+        sessions.forEach(s => {
+            const h = new Date(s.createdAt).getHours();
+            hourMap[h] += s.duration;
+        });
+        studyTimeTrend = Object.entries(hourMap).map(([h, t]) => ({
+            label: `${h.toString().padStart(2, '0')}:00`,
+            focusTime: t,
+        }));
+    } else if (filter === 'weekly') {
+        const dayMap: Record<string, number> = {};
+        DAYS.forEach(d => { dayMap[d] = 0; });
+        sessions.forEach(s => {
+            const jsDay = new Date(s.createdAt).getDay();
+            const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
+            dayMap[DAYS[dayIdx]] += s.duration;
+        });
+        studyTimeTrend = DAYS.map(d => ({ label: d, focusTime: dayMap[d] }));
+    } else {
+        // Monthly: bucket into weeks of the month
+        const weekMap: Record<string, number> = {};
+        for (let w = 1; w <= 5; w++) weekMap[`Week ${w}`] = 0;
+        sessions.forEach(s => {
+            const dayOfMonth = new Date(s.createdAt).getDate();
+            const weekNum = Math.ceil(dayOfMonth / 7);
+            weekMap[`Week ${weekNum}`] += s.duration;
+        });
+        studyTimeTrend = Object.entries(weekMap).map(([label, focusTime]) => ({ label, focusTime }));
+    }
+
+    return { weeklyProductivity, studyTimeTrend };
+};

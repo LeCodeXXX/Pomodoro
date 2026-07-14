@@ -1,0 +1,127 @@
+import { useState } from 'react'
+import { Clock, Target, BookOpen, BrainCircuit, Activity } from 'lucide-react'
+import { useChartData, type ChartFilter } from '../hooks/useChartData'
+import { WeeklyProductivityChart } from '../components/charts/WeeklyProductivityChart'
+import { StudyTimeTrendChart } from '../components/charts/StudyTimeTrendChart'
+
+interface Stats {
+  totalPomodoroSessions: number;
+  totalFocusTime: number;
+  documentsCount: number;
+  totalQuizzesTaken: number;
+  averageQuizScore: number;
+}
+
+interface StatsCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}
+
+function StatCard({ icon, label, value }: StatsCardProps) {
+  return (
+    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col justify-between hover:bg-white/[0.04] transition-colors group">
+      <div className="flex items-center gap-2 text-gray-500 mb-2 group-hover:text-gray-300 transition-colors">
+        {icon}
+        <span className="text-[10px] uppercase tracking-widest font-medium">{label}</span>
+      </div>
+      <div className="text-2xl font-light text-white">{value}</div>
+    </div>
+  )
+}
+
+const FILTERS: { label: string; value: ChartFilter }[] = [
+  { label: 'Daily', value: 'daily' },
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Monthly', value: 'monthly' },
+]
+
+export function StatsPage({ user, stats, statsLoading }: { user: any; stats: Stats | null; statsLoading: boolean }) {
+  const [filter, setFilter] = useState<ChartFilter>('weekly')
+  const { data: chartData, loading: chartLoading } = useChartData(user?.id, filter)
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    if (hours > 0) return `${hours}h ${minutes}m`
+    return `${minutes}m`
+  }
+
+  if (!user) {
+    return (
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center text-center py-20">
+        <Activity className="w-12 h-12 text-gray-700 mb-4" />
+        <h2 className="text-xl font-light text-gray-400">Please sign in to view your statistics.</h2>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-3xl mx-auto flex flex-col gap-6 mt-2">
+      {/* Header + global filter */}
+      <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl font-light text-white tracking-tight">Your Activity</h2>
+          <p className="text-gray-500 text-xs">A summary of your focus sessions and learning progress.</p>
+        </div>
+        <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-0.5">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`text-[10px] tracking-wide px-2.5 py-1 rounded-md transition-all ${
+                filter === f.value ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stat summary cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard
+          icon={<Clock className="w-3.5 h-3.5" />}
+          label="Focus Time"
+          value={statsLoading ? '—' : stats ? formatTime(stats.totalFocusTime) : '0m'}
+        />
+        <StatCard
+          icon={<Target className="w-3.5 h-3.5" />}
+          label="Sessions"
+          value={statsLoading ? '—' : stats?.totalPomodoroSessions ?? 0}
+        />
+        <StatCard
+          icon={<BookOpen className="w-3.5 h-3.5" />}
+          label="Materials"
+          value={statsLoading ? '—' : stats?.documentsCount ?? 0}
+        />
+        <StatCard
+          icon={<BrainCircuit className="w-3.5 h-3.5" />}
+          label="Avg Score"
+          value={
+            statsLoading ? '—' : (
+              <span>
+                {stats?.averageQuizScore ?? 0}
+                <span className="text-sm text-gray-500 font-light ml-0.5">%</span>
+              </span>
+            )
+          }
+        />
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <WeeklyProductivityChart
+          data={chartData?.weeklyProductivity ?? []}
+          isLoading={chartLoading}
+        />
+        <StudyTimeTrendChart
+          data={chartData?.studyTimeTrend ?? []}
+          filter={filter}
+          isLoading={chartLoading}
+        />
+      </div>
+    </div>
+  )
+}
