@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Coffee, Target, Zap, UserCircle, LogOut } from 'lucide-react'
 
 import { type TimerMode } from './components/SettingsModal'
@@ -56,6 +56,13 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'timer' | 'materials' | 'stats'>('timer')
   const [stats, setStats] = useState<any>(null)
   const [statsLoading, setStatsLoading] = useState(false)
+
+  // Ref to hold the chart refetch function (set by StatsPage via prop)
+  const refetchChartsRef = useRef<(() => void) | null>(null)
+
+  // Track accumulated break duration for the current break period so we can
+  // store it together with the focus session that preceded it.
+  const breakDurationRef = useRef(0)
 
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('pomodoroUser')
@@ -162,8 +169,23 @@ function App() {
     }
   }
 
-  const recordSession = async (duration: number, completed: boolean) => {
-    if (!user) return;
+  /**
+   * Record a completed focus session to the backend.
+   * breakDuration is the duration of the break that *followed* this focus session.
+   * When called at focus-end (before the break), breakDuration is 0 and will be
+   * updated once the break completes via the session's breakDuration field.
+   *
+   * Since we record the session immediately when focus ends, we pass breakDuration
+   * as 0 at focus completion and then update it after the break finishes. However,
+   * the spec requires per-session break storage, so we instead store the full
+   * focus session record AFTER the break ends (so we know the actual break duration).
+   *
+   * Implementation: we delay the API call until the break ends.
+   */
+  const pendingFocusDurationRef = useRef<number>(0)
+
+  const flushCompletedSession = useCallback(async (focusDuration: number, breakDuration: number) => {
+    if (!user) return
     try {
       await fetch('http://localhost:3000/api/users/pomodoro-session', {
         method: 'POST',
@@ -171,12 +193,15 @@ function App() {
           'Content-Type': 'application/json',
           'x-user-id': user.id,
         },
-        body: JSON.stringify({ duration, completed }),
-      });
+        body: JSON.stringify({ duration: focusDuration, completed: true, breakDuration }),
+      })
+      // Refresh stats and charts after recording
+      fetchStats(user.id)
+      refetchChartsRef.current?.()
     } catch (error) {
-      console.error('Error recording session:', error);
+      console.error('Error recording session:', error)
     }
-  };
+  }, [user, fetchStats])
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -195,44 +220,73 @@ function App() {
     }
   }, [selectedMode, isActive, isWorkSession, timerModes])
 
+  // ─── Core timer tick + auto-cycle ───────────────────────────────────────────
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
+
     if (isActive && !isPaused && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1)
+
+        // Accumulate break time while in a break session
+        if (!isWorkSession) {
+          breakDurationRef.current += 1
+        }
       }, 1000)
     } else if (isActive && !isPaused && timeLeft === 0) {
       const mode = timerModes.find((m) => m.id === selectedMode)
       if (mode) {
         playTimerSound()
+
         if (isWorkSession) {
-          recordSession(mode.timeInSeconds, true)
+          // ── Focus session just completed ──
+          // Store focus duration; we'll flush to DB after the break finishes
+          pendingFocusDurationRef.current = mode.timeInSeconds
+          breakDurationRef.current = 0
+
+          // Auto-transition to break
           setIsWorkSession(false)
           setTimeLeft(mode.breakInSeconds)
         } else {
-          setIsActive(false)
+          // ── Break just completed ──
+          // Now we have both the focus duration and the full break duration → record
+          flushCompletedSession(pendingFocusDurationRef.current, mode.breakInSeconds)
+          pendingFocusDurationRef.current = 0
+          breakDurationRef.current = 0
+
+          // Auto-transition back to a new focus session (cycle continues)
           setIsWorkSession(true)
           setTimeLeft(mode.timeInSeconds)
+          // isActive stays true — the cycle continues automatically
         }
       }
     }
-    return () => clearInterval(interval)
-  }, [isActive, isPaused, timeLeft, selectedMode, isWorkSession])
 
-  const handleStart = () => { setIsActive(true); setIsPaused(false) }
+    return () => clearInterval(interval)
+  }, [isActive, isPaused, timeLeft, selectedMode, isWorkSession, flushCompletedSession])
+
+  const handleStart = () => {
+    pendingFocusDurationRef.current = 0
+    breakDurationRef.current = 0
+    setIsActive(true)
+    setIsPaused(false)
+  }
+
   const handlePause = () => setIsPaused(true)
   const handleResume = () => setIsPaused(false)
 
   const handleFinish = () => {
+    // Per spec: incomplete/cancelled sessions are NOT recorded.
+    // We simply discard any pending focus session and reset state.
+    pendingFocusDurationRef.current = 0
+    breakDurationRef.current = 0
+
     setIsActive(false)
     setIsPaused(false)
     setIsWorkSession(true)
+
     const mode = timerModes.find((m) => m.id === selectedMode)
     if (mode) {
-      if (isWorkSession) {
-        const duration = mode.timeInSeconds - timeLeft
-        if (duration > 0) recordSession(duration, false)
-      }
       setTimeLeft(mode.timeInSeconds)
     }
   }
@@ -307,7 +361,12 @@ function App() {
         ) : currentPage === 'materials' ? (
           <StudyMaterialPage user={user} />
         ) : (
-          <StatsPage user={user} stats={stats} statsLoading={statsLoading} />
+          <StatsPage
+            user={user}
+            stats={stats}
+            statsLoading={statsLoading}
+            onRegisterRefetch={(fn) => { refetchChartsRef.current = fn }}
+          />
         )}
       </div>
 

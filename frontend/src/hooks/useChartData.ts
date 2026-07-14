@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 export type ChartFilter = 'daily' | 'weekly' | 'monthly'
 
@@ -23,8 +23,13 @@ export function useChartData(userId: string | undefined, filter: ChartFilter) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!userId) {
+  // Keep a stable ref to the current userId/filter so refetch always uses up-to-date values
+  const paramsRef = useRef({ userId, filter })
+  paramsRef.current = { userId, filter }
+
+  const fetchData = useCallback(async () => {
+    const { userId: uid, filter: f } = paramsRef.current
+    if (!uid) {
       setLoading(false)
       return
     }
@@ -32,24 +37,25 @@ export function useChartData(userId: string | undefined, filter: ChartFilter) {
     setLoading(true)
     setError(null)
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:3000/api/users/chart-data?filter=${filter}`,
-          { headers: { 'x-user-id': userId } }
-        )
-        if (!res.ok) throw new Error('Failed to fetch chart data')
-        const json = await res.json()
-        setData(json)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/users/chart-data?filter=${f}`,
+        { headers: { 'x-user-id': uid } }
+      )
+      if (!res.ok) throw new Error('Failed to fetch chart data')
+      const json = await res.json()
+      setData(json)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
+  }, [])
 
+  // Re-fetch whenever userId or filter changes
+  useEffect(() => {
     fetchData()
-  }, [userId, filter])
+  }, [userId, filter, fetchData])
 
-  return { data, loading, error }
+  return { data, loading, error, refetch: fetchData }
 }

@@ -79,18 +79,24 @@ export const recordPomodoroSession = async (req: AuthRequest, res: Response, nex
             throw new Error("Unauthorized");
         }
 
-        const { duration, completed } = req.body;
+        const { duration, completed, breakDuration } = req.body;
 
         if (duration === undefined || completed === undefined) {
             throw new Error("Missing required session fields");
         }
 
-        const session = await userServices.recordPomodoroSession(userId, Number(duration), Boolean(completed));
+        const session = await userServices.recordPomodoroSession(
+            userId,
+            Number(duration),
+            Boolean(completed),
+            Number(breakDuration ?? 0)
+        );
         res.status(201).json(session);
     } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
 };
+
 
 export const getChartData = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

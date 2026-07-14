@@ -120,11 +120,12 @@ model UserAnswer {
 }
 
 model PomodoroSession {
-  id          String   @id @default(uuid())
-  duration    Int
-  completed   Boolean
-  createdAt   DateTime @default(now())
-  userId      String
-  user        User @relation(fields: [userId], references: [id])
+  id            String   @id @default(uuid())
+  duration      Int
+  breakDuration Int      @default(0)
+  completed     Boolean
+  createdAt     DateTime @default(now())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
 }
 

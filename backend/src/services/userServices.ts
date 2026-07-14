@@ -54,27 +54,62 @@ export const getUserStats = async (userId: string) => {
         prisma.quizAttempt.findMany({ where: { userId } }),
     ]);
 
-    const totalPomodoroSessions = pomodoroSessions.filter(s => s.completed).length;
-    const totalFocusTime = pomodoroSessions.reduce((acc, curr) => acc + curr.duration, 0);
-    
+    const completedSessions = pomodoroSessions.filter(s => s.completed);
+
+    // Total focus time: only from completed focus sessions
+    const totalFocusTime = completedSessions.reduce((acc, curr) => acc + curr.duration, 0);
+
+    // Total break time: sum of breakDuration on completed sessions
+    const totalBreakTime = completedSessions.reduce((acc, curr) => acc + curr.breakDuration, 0);
+
+    const totalPomodoroSessions = completedSessions.length;
+
+    // Current streak: consecutive calendar days (local time) with >= 1 completed session
+    const sessionDays = new Set<string>(
+        completedSessions.map(s => {
+            const d = new Date(s.createdAt);
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        })
+    );
+
+    let currentStreak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+        const check = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        const key = `${check.getFullYear()}-${check.getMonth()}-${check.getDate()}`;
+        if (sessionDays.has(key)) {
+            currentStreak++;
+        } else {
+            break;
+        }
+    }
+
     const totalQuizzesTaken = quizAttempts.length;
-    const averageQuizScore = totalQuizzesTaken > 0 
+    const averageQuizScore = totalQuizzesTaken > 0
         ? Math.round(quizAttempts.reduce((acc, curr) => acc + (curr.score / curr.totalQuestions), 0) / totalQuizzesTaken * 100)
         : 0;
 
     return {
         totalPomodoroSessions,
         totalFocusTime,
+        totalBreakTime,
+        currentStreak,
         documentsCount,
         totalQuizzesTaken,
         averageQuizScore
     };
 };
 
-export const recordPomodoroSession = async (userId: string, duration: number, completed: boolean) => {
+export const recordPomodoroSession = async (
+    userId: string,
+    duration: number,
+    completed: boolean,
+    breakDuration: number = 0
+) => {
     const session = await prisma.pomodoroSession.create({
         data: {
             duration,
+            breakDuration,
             completed,
             userId
         }

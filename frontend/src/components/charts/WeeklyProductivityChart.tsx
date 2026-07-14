@@ -82,7 +82,7 @@ export function WeeklyProductivityChart({ data, isLoading }: Props) {
       isLoading={isLoading}
       headerRight={toggle}
     >
-      <ResponsiveContainer width="100%" height={180}>
+      <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} barSize={22} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
           <XAxis
             dataKey="day"

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Clock, Target, BookOpen, BrainCircuit, Activity } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Clock, Target, BookOpen, BrainCircuit, Activity, Coffee, Flame } from 'lucide-react'
 import { useChartData, type ChartFilter } from '../hooks/useChartData'
 import { WeeklyProductivityChart } from '../components/charts/WeeklyProductivityChart'
 import { StudyTimeTrendChart } from '../components/charts/StudyTimeTrendChart'
@@ -7,6 +7,8 @@ import { StudyTimeTrendChart } from '../components/charts/StudyTimeTrendChart'
 interface Stats {
   totalPomodoroSessions: number;
   totalFocusTime: number;
+  totalBreakTime: number;
+  currentStreak: number;
   documentsCount: number;
   totalQuizzesTaken: number;
   averageQuizScore: number;
@@ -20,12 +22,12 @@ interface StatsCardProps {
 
 function StatCard({ icon, label, value }: StatsCardProps) {
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col justify-between hover:bg-white/[0.04] transition-colors group">
-      <div className="flex items-center gap-2 text-gray-500 mb-2 group-hover:text-gray-300 transition-colors">
+    <div className="bg-white/[0.02] border border-white/5 rounded-xl py-4 px-5 flex flex-col justify-between hover:bg-white/[0.04] transition-colors group">
+      <div className="flex items-center gap-2 text-gray-500 mb-1 group-hover:text-gray-300 transition-colors">
         {icon}
         <span className="text-[10px] uppercase tracking-widest font-medium">{label}</span>
       </div>
-      <div className="text-2xl font-light text-white">{value}</div>
+      <div className="text-3xl font-light text-white">{value}</div>
     </div>
   )
 }
@@ -36,9 +38,24 @@ const FILTERS: { label: string; value: ChartFilter }[] = [
   { label: 'Monthly', value: 'monthly' },
 ]
 
-export function StatsPage({ user, stats, statsLoading }: { user: any; stats: Stats | null; statsLoading: boolean }) {
+interface StatsPageProps {
+  user: any;
+  stats: Stats | null;
+  statsLoading: boolean;
+  /** Called once on mount so App.tsx can trigger a chart refetch after a session. */
+  onRegisterRefetch?: (refetch: () => void) => void;
+}
+
+export function StatsPage({ user, stats, statsLoading, onRegisterRefetch }: StatsPageProps) {
   const [filter, setFilter] = useState<ChartFilter>('weekly')
-  const { data: chartData, loading: chartLoading } = useChartData(user?.id, filter)
+  const { data: chartData, loading: chartLoading, refetch } = useChartData(user?.id, filter)
+
+  // Register the refetch function with the parent so it can be called externally
+  useEffect(() => {
+    if (onRegisterRefetch) {
+      onRegisterRefetch(refetch)
+    }
+  }, [onRegisterRefetch, refetch])
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -57,8 +74,8 @@ export function StatsPage({ user, stats, statsLoading }: { user: any; stats: Sta
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-6 mt-2">
-      {/* Header + global filter */}
+    <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 mt-2">
+      {/* Header + global filter (Static, won't scroll) */}
       <div className="flex items-end justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-light text-white tracking-tight">Your Activity</h2>
@@ -79,48 +96,68 @@ export function StatsPage({ user, stats, statsLoading }: { user: any; stats: Sta
         </div>
       </div>
 
-      {/* Stat summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          icon={<Clock className="w-3.5 h-3.5" />}
-          label="Focus Time"
-          value={statsLoading ? '—' : stats ? formatTime(stats.totalFocusTime) : '0m'}
-        />
-        <StatCard
-          icon={<Target className="w-3.5 h-3.5" />}
-          label="Sessions"
-          value={statsLoading ? '—' : stats?.totalPomodoroSessions ?? 0}
-        />
-        <StatCard
-          icon={<BookOpen className="w-3.5 h-3.5" />}
-          label="Materials"
-          value={statsLoading ? '—' : stats?.documentsCount ?? 0}
-        />
-        <StatCard
-          icon={<BrainCircuit className="w-3.5 h-3.5" />}
-          label="Avg Score"
-          value={
-            statsLoading ? '—' : (
-              <span>
-                {stats?.averageQuizScore ?? 0}
-                <span className="text-sm text-gray-500 font-light ml-0.5">%</span>
-              </span>
-            )
-          }
-        />
-      </div>
+      {/* Scrollable Container for Cards and Charts */}
+      <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
+        {/* Stat summary cards — 2 rows × 3 cols */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <StatCard
+            icon={<Clock className="w-3.5 h-3.5" />}
+            label="Focus Time"
+            value={statsLoading ? '—' : stats ? formatTime(stats.totalFocusTime) : '0m'}
+          />
+          <StatCard
+            icon={<Coffee className="w-3.5 h-3.5" />}
+            label="Break Time"
+            value={statsLoading ? '—' : stats ? formatTime(stats.totalBreakTime ?? 0) : '0m'}
+          />
+          <StatCard
+            icon={<Target className="w-3.5 h-3.5" />}
+            label="Sessions"
+            value={statsLoading ? '—' : stats?.totalPomodoroSessions ?? 0}
+          />
+          <StatCard
+            icon={<Flame className="w-3.5 h-3.5" />}
+            label="Study Streak"
+            value={
+              statsLoading ? '—' : (
+                <span>
+                  {stats?.currentStreak ?? 0}
+                  <span className="text-sm text-gray-500 font-light ml-1">day{(stats?.currentStreak ?? 0) !== 1 ? 's' : ''}</span>
+                </span>
+              )
+            }
+          />
+          <StatCard
+            icon={<BookOpen className="w-3.5 h-3.5" />}
+            label="Materials"
+            value={statsLoading ? '—' : stats?.documentsCount ?? 0}
+          />
+          <StatCard
+            icon={<BrainCircuit className="w-3.5 h-3.5" />}
+            label="Avg Score"
+            value={
+              statsLoading ? '—' : (
+                <span>
+                  {stats?.averageQuizScore ?? 0}
+                  <span className="text-sm text-gray-500 font-light ml-0.5">%</span>
+                </span>
+              )
+            }
+          />
+        </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <WeeklyProductivityChart
-          data={chartData?.weeklyProductivity ?? []}
-          isLoading={chartLoading}
-        />
-        <StudyTimeTrendChart
-          data={chartData?.studyTimeTrend ?? []}
-          filter={filter}
-          isLoading={chartLoading}
-        />
+        {/* Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <WeeklyProductivityChart
+            data={chartData?.weeklyProductivity ?? []}
+            isLoading={chartLoading}
+          />
+          <StudyTimeTrendChart
+            data={chartData?.studyTimeTrend ?? []}
+            filter={filter}
+            isLoading={chartLoading}
+          />
+        </div>
       </div>
     </div>
   )
