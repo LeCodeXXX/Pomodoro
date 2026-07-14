@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/authMiddleware";
 import { upload } from "../middleware/uploadMiddleware";
 import * as quizControllers from "../controllers/quizControllers";
+import { generateQuizLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.post(
     "/quiz/generate",
     requireAuth,
     upload.single("file"),
+    generateQuizLimiter,
     quizControllers.generateQuiz
 );
 

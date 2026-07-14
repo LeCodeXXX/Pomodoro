@@ -21,12 +21,17 @@
     "docx-pdf-converter": "^1.2.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "form-data": "^4.0.6",
-    "multer": "^2.2.0"
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "rate-limit-redis": "^5.0.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.3",
     "prisma": "^6.19.3",
     "ts-node-dev": "^2.0.0",

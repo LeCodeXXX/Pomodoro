@@ -1,23 +1,38 @@
 import { Request, Response, NextFunction } from "express";
+import { verifyToken, JwtPayload } from "./auth";
 
-// Extend Express Request to include userId
+// Extend Express Request to include the decoded JWT payload
 export interface AuthRequest extends Request {
+    user?: JwtPayload;
     userId?: string;
 }
 
 /**
- * Simple auth middleware that reads userId from request headers.
- * The frontend passes the logged-in user's id as 'x-user-id'.
- * In the future this should be replaced with JWT verification.
+ * JWT auth middleware.
+ * Expects an `Authorization: Bearer <token>` header.
+ * Attaches the decoded payload to `req.user` on success.
  */
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
-    const userId = req.headers["x-user-id"] as string | undefined;
+    const authHeader = req.headers["authorization"];
 
-    if (!userId) {
-        res.status(401).json({ error: "Unauthorized: Missing user ID header" });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        res.status(401).json({ error: "Unauthorized: Missing or malformed token" });
         return;
     }
 
-    req.userId = userId;
-    next();
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const payload = verifyToken(token);
+        req.user = payload;
+        req.userId = payload.userId;
+        next();
+    } catch (err: any) {
+        if (err.name === "TokenExpiredError") {
+            res.status(401).json({ error: "Unauthorized: Token has expired" });
+        } else {
+            res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
+    }
 };
+

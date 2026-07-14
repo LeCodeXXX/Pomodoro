@@ -10,6 +10,7 @@ import userRoutes from "./routes/userRoutes";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT;
 
 if (!PORT) {
