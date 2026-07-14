@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Coffee, Target, Zap, UserCircle, LogOut } from 'lucide-react'
+import { getAuthHeader, storeToken, clearToken } from './utils/auth'
 
 import { type TimerMode } from './components/SettingsModal'
 import { AuthModal } from './components/AuthModal'
@@ -64,16 +65,24 @@ function App() {
   // store it together with the focus session that preceded it.
   const breakDurationRef = useRef(0)
 
+
   const [user, setUser] = useState<any>(() => {
     const saved = localStorage.getItem('pomodoroUser')
+    const token = localStorage.getItem('pomodoroToken')
+    // If user is stored but token is missing (pre-JWT migration), clear stale session
+    if (saved && !token) {
+      localStorage.removeItem('pomodoroUser')
+      return null
+    }
     return saved ? JSON.parse(saved) : null
   })
 
-  const fetchStats = useCallback(async (userId: string) => {
+
+  const fetchStats = useCallback(async () => {
     setStatsLoading(true)
     try {
       const res = await fetch('http://localhost:3000/api/users/stats', {
-        headers: { 'x-user-id': userId },
+        headers: { ...getAuthHeader() },
       })
       if (res.ok) setStats(await res.json())
     } catch (e) {
@@ -83,8 +92,9 @@ function App() {
     }
   }, [])
 
-  const handleLoginSuccess = (userData: any) => {
+  const handleLoginSuccess = (userData: any, token: string) => {
     localStorage.setItem('pomodoroUser', JSON.stringify(userData))
+    storeToken(token)
     setUser(userData)
   }
 
@@ -122,7 +132,7 @@ function App() {
     } else {
       setTimerModes(DEFAULT_TIMER_MODES)
     }
-    if (user) fetchStats(user.id)
+    if (user) fetchStats()
   }, [user, fetchStats])
 
   const handleUpdateModes = async (newModes: TimerMode[]) => {
@@ -147,7 +157,7 @@ function App() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'x-user-id': user.id,
+            ...getAuthHeader(),
           },
           body: JSON.stringify(body),
         })
@@ -191,12 +201,12 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          ...getAuthHeader(),
         },
         body: JSON.stringify({ duration: focusDuration, completed: true, breakDuration }),
       })
       // Refresh stats and charts after recording
-      fetchStats(user.id)
+      fetchStats()
       refetchChartsRef.current?.()
     } catch (error) {
       console.error('Error recording session:', error)
@@ -316,7 +326,7 @@ function App() {
             <>
               <span className="text-xs text-gray-400 tracking-wider">{user.name || user.email}</span>
               <button
-                onClick={() => { localStorage.removeItem('pomodoroUser'); setUser(null) }}
+                onClick={() => { localStorage.removeItem('pomodoroUser'); clearToken(); setUser(null) }}
                 className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-all text-gray-400 hover:text-red-400 border border-white/5"
                 title="Logout"
               >

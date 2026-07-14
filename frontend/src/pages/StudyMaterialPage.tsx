@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Search, BookOpen, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
+import { getAuthHeader } from '../utils/auth';
 import { PDFViewer } from '../components/PDFViewer';
 import { TextViewer } from '../components/TextViewer';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -54,7 +55,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
     if (!user) return;
     try {
       const response = await fetch('http://localhost:3000/api/documents', {
-        headers: { 'x-user-id': user.id }
+        headers: { ...getAuthHeader() }
       });
       const data = await response.json();
       if (response.ok) {
@@ -88,7 +89,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
 
       try {
         const response = await fetch(`http://localhost:3000/api/quiz/document/${selectedMaterial.id}`, {
-          headers: { 'x-user-id': user.id },
+          headers: { ...getAuthHeader() },
         });
 
         const data = await response.json();
@@ -170,7 +171,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
 
       const response = await fetch('http://localhost:3000/api/quiz/generate', {
         method: 'POST',
-        headers: { 'x-user-id': user.id },
+        headers: { ...getAuthHeader() },
         body: formData,
       });
 
@@ -200,7 +201,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       try {
         const response = await fetch('http://localhost:3000/api/documents/upload', {
           method: 'POST',
-          headers: { 'x-user-id': user.id },
+          headers: { ...getAuthHeader() },
           body: formData
         });
         

@@ -5,7 +5,7 @@ import { Mail, Lock, User, ArrowRight, X } from 'lucide-react'
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
-  onLoginSuccess: (user: any) => void
+  onLoginSuccess: (user: any, token: string) => void
 }
 
 export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
@@ -39,7 +39,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
         throw new Error(data.message || data.error || 'Authentication failed')
       }
 
-      onLoginSuccess(data.user)
+      onLoginSuccess(data.user, data.token)
       onClose()
     } catch (err: any) {
       setError(err.message || 'Something went wrong')

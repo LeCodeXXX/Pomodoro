@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { getAuthHeader } from '../utils/auth'
 import { CheckCircle2, ChevronDown, ListChecks, X } from 'lucide-react'
 import { QuizAttemptTrackerModal } from './QuizAttemptTrackerModal.tsx'
 
@@ -245,7 +246,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': userId || quiz?.userId,
+          ...getAuthHeader(),
         },
         body: JSON.stringify({ responses }),
       })

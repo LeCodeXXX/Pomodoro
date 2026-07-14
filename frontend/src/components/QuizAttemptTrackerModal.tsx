@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Clock3, Loader2, ListChecks, X } from 'lucide-react'
+import { getAuthHeader } from '../utils/auth'
 
 interface QuizAttemptTrackerModalProps {
   isOpen: boolean
@@ -53,7 +54,7 @@ export function QuizAttemptTrackerModal({
       try {
         const response = await fetch(`http://localhost:3000/api/quiz/${quizId}/attempts`, {
           headers: {
-            'x-user-id': userId,
+            ...getAuthHeader(),
           },
         })
 

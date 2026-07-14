@@ -17,7 +17,11 @@ if (!PORT) {
     throw new Error("Please provide a PORT in the .env file");
 }
 
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
 app.use(express.json());
 
 // Serve uploaded files as static assets

@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import Redis from "ioredis";
 import { RedisStore } from "rate-limit-redis";
 
@@ -21,7 +21,7 @@ if (process.env.REDIS_URL) {
 }
 
 const keyGenerator = (req: any): string => {
-    return req.userId ?? req.ip;
+    return req.userId ?? ipKeyGenerator(req);
 };
 
 const makeLimiter = (options: { windowMs: number; max: number; message: any }) => {

@@ -11,9 +11,9 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             throw new Error("Name, email, and password are required");
         }
 
-        const user = await authServices.createAccount({ name, email, password });
+        const { token, user } = await authServices.createAccount({ name, email, password });
 
-        res.status(201).json({ user });
+        res.status(201).json({ token, user });
 
     } catch (error: any) {
         res.status(400).json({ error: error.message });
@@ -29,11 +29,11 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             throw new Error("Email and password are required");
         }
 
-        const user = await authServices.login({ email, password });
+        const { token, user } = await authServices.login({ email, password });
 
-        res.status(200).json({ user });
+        res.status(200).json({ token, user });
 
     } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
-}
+}
