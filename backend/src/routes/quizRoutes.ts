@@ -3,6 +3,7 @@ import { requireAuth } from "../middleware/authMiddleware";
 import { upload } from "../middleware/uploadMiddleware";
 import * as quizControllers from "../controllers/quizControllers";
 import { generateQuizLimiter } from "../middleware/rateLimiter";
+import { validateBody, quizGenerateSchema } from "../middleware/validationMiddleware";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.post(
     "/quiz/generate",
     requireAuth,
     upload.single("file"),
+    validateBody(quizGenerateSchema),
     generateQuizLimiter,
     quizControllers.generateQuiz
 );
