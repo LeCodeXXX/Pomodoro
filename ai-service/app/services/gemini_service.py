@@ -15,16 +15,19 @@ class GeminiService:
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model_name = settings.gemini_model
     
-    async def generate_quiz(self, prompt: str) -> Optional[Dict]:
-        """Generate quiz using Gemini"""
+    async def generate_quiz(self, contents: str, system_instruction: str) -> Optional[Dict]:
+        """Generate quiz using Gemini with system instructions"""
         try:
-            # We are using generate_content. The synchronous method is available,
-            # but for FastAPI, it's best to run blocking tasks in an executor or use async if provided.
-            # Currently google-genai synchronous client is simple enough for this scope, 
-            # though we could wrap it in asyncio.to_thread if we wanted strict async.
+            from google.genai import types
+            
+            # Using Google GenAI client to generate content with system instruction and JSON format
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=prompt
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    response_mime_type="application/json"
+                )
             )
             return {
                 "response": response.text,
@@ -34,9 +37,9 @@ class GeminiService:
             logger.error(f"Gemini API error: {str(e)}")
             return {"success": False, "error": str(e)}
     
-    async def generate_json_response(self, prompt: str) -> Optional[Dict]:
+    async def generate_json_response(self, contents: str, system_instruction: str) -> Optional[Dict]:
         """Generate and parse JSON from Gemini"""
-        response_data = await self.generate_quiz(prompt)
+        response_data = await self.generate_quiz(contents, system_instruction)
         
         if not response_data.get("success"):
             return None

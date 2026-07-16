@@ -4,11 +4,15 @@ import path from "path";
 import FormData from "form-data";
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
+const AI_SERVICE_API_KEY = process.env.AI_SERVICE_API_KEY;
 
 class AIService {
     private client = axios.create({
         baseURL: AI_SERVICE_URL,
         timeout: 65000, // 65 seconds — quiz generation can take a while
+        headers: {
+            "X-API-Key": AI_SERVICE_API_KEY || "",
+        },
     });
 
     /**

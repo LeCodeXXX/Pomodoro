@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     gemini_api_key: str
     gemini_model: str = "gemini-2.5-flash"
     
+    # AI Service API Security
+    ai_service_api_key: str
+    
     # File Processing
     max_file_size_mb: int = 50
     chunk_size: int = 1000

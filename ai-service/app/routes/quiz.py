@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from app.models import QuizGenerationRequest
 from app.services.quiz_generator import quiz_generator
+from app.utils.security import get_api_key
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/quiz/generate")
+@router.post("/quiz/generate", dependencies=[Depends(get_api_key)])
 async def generate_quiz(request: QuizGenerationRequest):
     """Generate quiz from document"""
     

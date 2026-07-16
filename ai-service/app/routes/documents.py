@@ -1,10 +1,12 @@
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from fastapi.responses import JSONResponse
 import aiofiles
 import os
 import uuid
 import logging
 from app.services.document_service import doc_service
+from app.utils.security import get_api_key
+from app.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/documents/process")
+@router.post("/documents/process", dependencies=[Depends(get_api_key)])
 async def process_document(
     file: UploadFile = File(...),
     file_type: str = Form(...),
@@ -26,17 +28,28 @@ async def process_document(
         # Validate
         if not file.filename:
             raise HTTPException(400, "No filename")
+            
+        # Extension validation
+        ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
+        ext = file.filename.split(".")[-1].lower() if "." in file.filename else ""
+        if ext not in ALLOWED_EXTENSIONS or file_type.lower() not in ALLOWED_EXTENSIONS:
+            raise HTTPException(400, f"Unsupported file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
         
         # Save
         file_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}_{file.filename}")
+        
+        # Stream write chunk by chunk with size limit check to prevent DoS
+        limit = settings.max_file_size_mb * 1024 * 1024
+        total_bytes = 0
         async with aiofiles.open(file_path, 'wb') as f:
-            content = await file.read()
-            
-            # Very basic size check here. Better done via middleware/config
-            if len(content) > 50 * 1024 * 1024:
-                raise HTTPException(413, "File too large. Maximum size is 50MB.")
-                
-            await f.write(content)
+            while True:
+                chunk = await file.read(1024 * 1024)  # 1MB chunks
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > limit:
+                    raise HTTPException(413, f"File too large. Maximum size is {settings.max_file_size_mb}MB.")
+                await f.write(chunk)
         
         # Process
         result = await doc_service.process_document(

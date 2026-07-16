@@ -19,7 +19,8 @@ def main():
         
         # Test Health Check
         print("\n--- Testing Health Check ---")
-        health_res = requests.get("http://localhost:8000/api/health")
+        headers = {"X-API-Key": "dev_shared_api_key_pomodoro_2026"}
+        health_res = requests.get("http://localhost:8000/api/health", headers=headers)
         print(f"Status Code: {health_res.status_code}")
         print(f"Response: {health_res.json()}")
         
@@ -32,7 +33,7 @@ def main():
                 "user_id": "test_user",
                 "document_title": "Test Document"
             }
-            doc_res = requests.post("http://localhost:8000/api/documents/process", files=files, data=data)
+            doc_res = requests.post("http://localhost:8000/api/documents/process", files=files, data=data, headers=headers)
             
         print(f"Status Code: {doc_res.status_code}")
         doc_data = doc_res.json()
@@ -51,7 +52,7 @@ def main():
                 },
                 "user_id": "test_user"
             }
-            quiz_res = requests.post("http://localhost:8000/api/quiz/generate", json=quiz_req)
+            quiz_res = requests.post("http://localhost:8000/api/quiz/generate", json=quiz_req, headers=headers)
             print(f"Status Code: {quiz_res.status_code}")
             try:
                 quiz_data = quiz_res.json()

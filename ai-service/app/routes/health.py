@@ -1,9 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.config import settings
+from app.utils.security import get_api_key
 
 router = APIRouter()
 
-@router.get("/health")
+@router.get("/health", dependencies=[Depends(get_api_key)])
 async def health_check():
     return {
         "status": "healthy",
