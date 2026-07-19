@@ -76,11 +76,19 @@ class AIService {
     async healthCheck() {
         try {
             const response = await this.client.get("/api/health");
+
+            if (response.status !== 200 || response.data?.status !== "healthy") {
+                throw {
+                    status: "AI_SERVICE_UNAVAILABLE",
+                    message: response.data?.detail?.message || response.data?.message || "AI service reported unhealthy status",
+                };
+            }
+
             return response.data;
         } catch (error: any) {
             throw {
                 status: "AI_SERVICE_UNAVAILABLE",
-                message: error.message,
+                message: error.message || error?.response?.data?.detail?.message || "AI service is currently unavailable.",
             };
         }
     }
