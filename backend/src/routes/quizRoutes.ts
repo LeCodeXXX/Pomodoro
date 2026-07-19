@@ -4,6 +4,7 @@ import { upload } from "../middleware/uploadMiddleware";
 import * as quizControllers from "../controllers/quizControllers";
 import { generateQuizLimiter } from "../middleware/rateLimiter";
 import { validateBody, quizGenerateSchema } from "../middleware/validationMiddleware";
+import { checkAIHealth } from "../middleware/aiHealthCheckMiddleware";
 
 const router = Router();
 
@@ -14,9 +15,16 @@ const router = Router();
 //   numQuestions   (number, 1–50)
 //   quizLabel      (string, e.g. "Biology")
 //   documentId     (optional, UUID of an existing document to link)
+router.get(
+    "/quiz/health",
+    requireAuth,
+    checkAIHealth
+);
+
 router.post(
     "/quiz/generate",
     requireAuth,
+    checkAIHealth,
     upload.single("file"),
     validateBody(quizGenerateSchema),
     generateQuizLimiter,

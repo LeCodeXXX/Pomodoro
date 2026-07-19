@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Search, BookOpen, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
 import { getAuthHeader } from '../utils/auth';
@@ -50,6 +50,26 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
   const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
   const [isLoadingSavedQuizzes, setIsLoadingSavedQuizzes] = useState(false);
   const [savedQuizError, setSavedQuizError] = useState<string | null>(null);
+  const [isAIServiceHealthy, setIsAIServiceHealthy] = useState<boolean | null>(null);
+
+  const checkAIServiceHealth = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/quiz/health', {
+        method: 'GET',
+        headers: { ...getAuthHeader() },
+      })
+
+      if (!res.ok) {
+        setIsAIServiceHealthy(false);
+        throw new Error(`Health check failed with status ${res.status}`);
+      }
+
+      setIsAIServiceHealthy(true);
+    } catch (error) {
+      console.error('Error checking AI service health:', error)
+      setIsAIServiceHealthy(false)
+    }
+  }, [])
 
   const fetchMaterials = async () => {
     if (!user) return;
@@ -75,7 +95,10 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
   };
 
   useEffect(() => {
-    fetchMaterials();
+    if (user) {
+      checkAIServiceHealth();
+      fetchMaterials();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -365,8 +388,8 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleOpenQuizSetup}
-                  disabled={!selectedMaterial || isGeneratingQuiz}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!selectedMaterial || isGeneratingQuiz || !isAIServiceHealthy}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500"
                 >
                   <span className="hidden sm:inline">{isGeneratingQuiz ? 'GENERATING...' : 'GENERATE QUIZ'}</span>
                 </button>

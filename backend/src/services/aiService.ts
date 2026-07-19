@@ -74,8 +74,15 @@ class AIService {
      * Check if the AI service is reachable.
      */
     async healthCheck() {
-        const response = await this.client.get("/api/health");
-        return response.data;
+        try {
+            const response = await this.client.get("/api/health");
+            return response.data;
+        } catch (error: any) {
+            throw {
+                status: "AI_SERVICE_UNAVAILABLE",
+                message: error.message,
+            };
+        }
     }
 }
 

@@ -57,7 +57,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'timer' | 'materials' | 'stats'>('timer')
   const [stats, setStats] = useState<any>(null)
   const [statsLoading, setStatsLoading] = useState(false)
-
   // Ref to hold the chart refetch function (set by StatsPage via prop)
   const refetchChartsRef = useRef<(() => void) | null>(null)
 
