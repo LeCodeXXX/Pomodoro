@@ -336,9 +336,9 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-[#ededed] flex flex-col items-center justify-between py-12 px-6 font-sans overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0a] text-[#ededed] flex flex-col items-center justify-between py-6 md:py-12 px-4 md:px-6 font-sans overflow-hidden">
       {/* Header */}
-      <header className="w-full max-w-7xl flex justify-between items-center transition-opacity duration-500 relative z-50 mb-10 opacity-80">
+      <header className="w-full max-w-7xl flex justify-between items-center transition-opacity duration-500 relative z-50 mb-6 md:mb-10 opacity-80">
         <h1 className="text-xs tracking-[0.4em] font-medium text-gray-500">FOCUS TIMER</h1>
         <div className="flex items-center gap-3">
           {user ? (
@@ -365,7 +365,7 @@ function App() {
       </header>
 
       {/* Page Content */}
-      <div className="flex-1 w-full flex flex-col items-center justify-center -mt-12">
+      <div className="flex-1 w-full flex flex-col items-center justify-center -mt-4 md:-mt-12">
         {currentPage === 'timer' ? (
           <MainTimerPage
             timerModes={timerModes}

@@ -22,12 +22,12 @@ interface StatsCardProps {
 
 function StatCard({ icon, label, value }: StatsCardProps) {
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-xl py-4 px-5 flex flex-col justify-between hover:bg-white/[0.04] transition-colors group">
-      <div className="flex items-center gap-2 text-gray-500 mb-1 group-hover:text-gray-300 transition-colors">
+    <div className="bg-white/2 border border-white/5 rounded-xl py-3 px-4 flex flex-col justify-between hover:bg-white/4 transition-colors group">
+      <div className="flex items-center gap-1.5 text-gray-500 mb-1 group-hover:text-gray-300 transition-colors">
         {icon}
-        <span className="text-[10px] uppercase tracking-widest font-medium">{label}</span>
+        <span className="text-[9px] sm:text-[10px] uppercase tracking-widest font-medium truncate">{label}</span>
       </div>
-      <div className="text-3xl font-light text-white">{value}</div>
+      <div className="text-2xl sm:text-3xl font-light text-white">{value}</div>
     </div>
   )
 }
@@ -76,17 +76,17 @@ export function StatsPage({ user, stats, statsLoading, onRegisterRefetch }: Stat
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 mt-2">
       {/* Header + global filter (Static, won't scroll) */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-xl font-light text-white tracking-tight">Your Activity</h2>
           <p className="text-gray-500 text-xs">A summary of your focus sessions and learning progress.</p>
         </div>
-        <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-white/4 rounded-lg p-0.5 self-start sm:self-auto">
           {FILTERS.map(f => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`text-[10px] tracking-wide px-2.5 py-1 rounded-md transition-all ${
+              className={`text-[10px] tracking-wide px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-md transition-all ${
                 filter === f.value ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -98,8 +98,8 @@ export function StatsPage({ user, stats, statsLoading, onRegisterRefetch }: Stat
 
       {/* Scrollable Container for Cards and Charts */}
       <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto no-scrollbar pr-1">
-        {/* Stat summary cards — 2 rows × 3 cols */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {/* Stat summary cards — 3 rows × 2 cols on mobile, 2 rows × 3 cols on large screens */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
           <StatCard
             icon={<Clock className="w-3.5 h-3.5" />}
             label="Focus Time"
@@ -122,7 +122,7 @@ export function StatsPage({ user, stats, statsLoading, onRegisterRefetch }: Stat
               statsLoading ? '—' : (
                 <span>
                   {stats?.currentStreak ?? 0}
-                  <span className="text-sm text-gray-500 font-light ml-1">day{(stats?.currentStreak ?? 0) !== 1 ? 's' : ''}</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-light ml-1">day{(stats?.currentStreak ?? 0) !== 1 ? 's' : ''}</span>
                 </span>
               )
             }
@@ -139,7 +139,7 @@ export function StatsPage({ user, stats, statsLoading, onRegisterRefetch }: Stat
               statsLoading ? '—' : (
                 <span>
                   {stats?.averageQuizScore ?? 0}
-                  <span className="text-sm text-gray-500 font-light ml-0.5">%</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-light ml-0.5">%</span>
                 </span>
               )
             }
