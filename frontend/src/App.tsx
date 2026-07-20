@@ -98,6 +98,26 @@ function App() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    const userParam = params.get('user')
+
+    if (token && userParam) {
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(userParam))
+        handleLoginSuccess(parsedUser, token)
+
+        const nextUrl = new URL(window.location.href)
+        nextUrl.searchParams.delete('token')
+        nextUrl.searchParams.delete('user')
+        window.history.replaceState({}, document.title, `${nextUrl.pathname}${nextUrl.search}`)
+      } catch (error) {
+        console.error('Failed to parse OAuth login response:', error)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     if (user) {
       setTimerModes([
         {

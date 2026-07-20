@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, X } from 'lucide-react'
+import { FcGoogle } from "react-icons/fc";
 
 interface AuthModalProps {
   isOpen: boolean
@@ -174,6 +175,19 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               </button>
             </form>
+
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = 'http://localhost:3000/api/auth/google'
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-[#ededed] transition hover:bg-white/10"
+              >
+                <FcGoogle />
+                <span>Continue with Google</span>
+              </button>
+            </div>
 
             {/* Toggle login/register */}
             <div className="mt-6 text-center">

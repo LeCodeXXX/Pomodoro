@@ -46,7 +46,10 @@ model User {
 model Auth {
   id           String @id @default(uuid())
   email        String @unique
-  passwordHash String
+  passwordHash String?
+  provider     String  @default("local")
+  providerId   String?
+  emailVerified Boolean @default(false)
   userId       String @unique
   user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
