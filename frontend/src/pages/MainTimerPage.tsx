@@ -123,7 +123,7 @@ export function MainTimerPage({
                     initial={isMobile ? { opacity: 0, y: 40 } : false}
                     animate={isMobile ? { opacity: 1, y: 0 } : false}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                    className={`flex flex-col items-center w-full ${isActive ? (isMobile ? 'justify-center gap-8 h-full px-6' : 'justify-between h-full') : 'justify-between h-full'}`}
+                    className={`flex flex-col items-center w-full h-full ${isActive ? 'justify-center' : 'justify-between'} ${isActive && isMobile ? 'gap-8 px-6' : ''}`}
                   >
                     <motion.div
                       layout
