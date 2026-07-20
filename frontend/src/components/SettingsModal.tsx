@@ -70,18 +70,18 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md bg-[#141414] border border-white/10 p-8 rounded-[20px] shadow-2xl flex flex-col gap-8"
+            className="relative w-[calc(100%-2rem)] max-w-md bg-[#141414] border border-white/10 p-5 md:p-8 rounded-[20px] shadow-2xl flex flex-col gap-4 md:gap-8 max-h-[90vh] overflow-y-auto no-scrollbar"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-medium tracking-widest text-[#ededed]">SETTINGS</h2>
+              <h2 className="text-xl md:text-2xl font-medium tracking-widest text-[#ededed]">SETTINGS</h2>
               <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3 md:gap-6">
               {localModes.map((mode) => (
-                <div key={mode.id} className="flex flex-col gap-3 p-4 bg-white/5 rounded-lg border border-white/5">
+                <div key={mode.id} className="flex flex-col gap-2 md:gap-3 p-3 md:p-4 bg-white/5 rounded-lg border border-white/5">
                   <h3 className="text-xs font-semibold tracking-wider text-gray-400">{mode.label}</h3>
                   <div className="flex gap-4">
                     <div className="flex-1 flex flex-col gap-2">
@@ -92,7 +92,7 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
                         max="120"
                         value={Math.floor(mode.timeInSeconds / 60)}
                         onChange={(e) => handleChange(mode.id, 'timeInSeconds', e.target.value)}
-                        className="bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white text-sm outline-none focus:border-white/30 transition-colors"
+                        className="bg-black/50 border border-white/10 rounded-md px-3 py-2 md:px-4 md:py-3 text-white text-sm outline-none focus:border-white/30 transition-colors w-full"
                       />
                     </div>
                     <div className="flex-1 flex flex-col gap-2">
@@ -103,7 +103,7 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
                         max="60"
                         value={Math.floor(mode.breakInSeconds / 60)}
                         onChange={(e) => handleChange(mode.id, 'breakInSeconds', e.target.value)}
-                        className="bg-black/50 border border-white/10 rounded-md px-4 py-3 text-white text-sm outline-none focus:border-white/30 transition-colors"
+                        className="bg-black/50 border border-white/10 rounded-md px-3 py-2 md:px-4 md:py-3 text-white text-sm outline-none focus:border-white/30 transition-colors w-full"
                       />
                     </div>
                   </div>
@@ -113,7 +113,7 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
 
             <button
               onClick={handleSave}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-[#ededed] hover:bg-white text-black rounded-full font-semibold transition-all mt-4"
+              className="flex items-center justify-center gap-2 w-full py-3 md:py-4 bg-[#ededed] hover:bg-white text-black rounded-full font-semibold transition-all mt-2 md:mt-4"
             >
               <Save className="w-4 h-4" />
               <span>SAVE CHANGES</span>

@@ -80,9 +80,9 @@ export function MainTimerPage({
                 animate={isMobile ? {
                   x: 0,
                   y: 0,
-                  scale: 1,
-                  opacity: 1,
-                  zIndex: isActive ? 40 : 1,
+                  scale: isSelected ? 1.03 : 0.97,
+                  opacity: isSelected ? 1 : 0.6,
+                  zIndex: isActive ? 40 : (isSelected ? 10 : 1),
                 } : {
                   x: isActive ? 0 : diff * 320,
                   y: 0,
@@ -93,7 +93,7 @@ export function MainTimerPage({
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 onClick={() => !isActive && onSetSelectedMode(mode.id)}
                 className={`border flex items-center shadow-2xl backdrop-blur-sm transition-colors duration-200
-                  ${isActive ? 'flex-col fixed inset-0 w-full h-full bg-[#0a0a0a] rounded-none cursor-default justify-center pb-24 md:pb-32 z-40' : 
+                  ${isActive ? 'flex-col fixed inset-0 w-full h-full bg-[#0a0a0a] rounded-none cursor-default justify-center pb-0 md:pb-32 z-40' : 
                     isMobile ? `relative bg-[#141414] rounded-[20px] w-72 h-[10vh] min-h-[72px] max-h-[100px] cursor-pointer px-5 py-3 justify-between ${isSelected ? 'border-white/20 bg-white/5 ring-1 ring-white/10' : 'border-white/5'}` : 
                     `absolute bg-[#141414] rounded-[30px] w-75 h-100 cursor-pointer p-10 justify-between ${isSelected ? 'ring-1 ring-white/10 border-white/10' : 'border-white/5'}`}`}
               >
@@ -123,7 +123,7 @@ export function MainTimerPage({
                     initial={isMobile ? { opacity: 0, y: 40 } : false}
                     animate={isMobile ? { opacity: 1, y: 0 } : false}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                    className="flex flex-col items-center justify-between w-full h-full"
+                    className={`flex flex-col items-center w-full ${isActive ? (isMobile ? 'justify-center gap-8 h-full px-6' : 'justify-between h-full') : 'justify-between h-full'}`}
                   >
                     <motion.div
                       layout
@@ -158,10 +158,44 @@ export function MainTimerPage({
                       </div>
                     </motion.div>
 
-                    <motion.div
-                      layout
-                      className={`w-12 h-1 rounded-full ${isActive ? 'mt-6 md:mt-12' : ''} ${isSelected ? (isWorkSession ? 'bg-white/20' : 'bg-blue-500/50') : 'bg-transparent'}`}
-                    />
+                    {isMobile && isActive ? (
+                      <div className="flex items-center gap-4 mt-6">
+                        <button
+                          onClick={onFinish}
+                          className="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-full transition-all text-red-400 border border-red-500/20"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                        {isPaused ? (
+                          <button
+                            onClick={onResume}
+                            className="flex items-center gap-2 px-6 py-3 bg-[#ededed] hover:bg-white text-black rounded-full font-semibold transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] text-sm"
+                          >
+                            <Play className="w-4 h-4 fill-current" />
+                            <span>RESUME</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={onPause}
+                            className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all backdrop-blur-md border border-white/10 text-sm"
+                          >
+                            <Pause className="w-4 h-4 fill-current" />
+                            <span>PAUSE</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={onReset}
+                          className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-gray-400 hover:text-white border border-white/5"
+                        >
+                          <RotateCcw className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <motion.div
+                        layout
+                        className={`w-12 h-1 rounded-full ${isActive ? 'mt-6 md:mt-12' : ''} ${isSelected ? (isWorkSession ? 'bg-white/20' : 'bg-blue-500/50') : 'bg-transparent'}`}
+                      />
+                    )}
                   </motion.div>
                 )}
               </motion.div>
@@ -174,7 +208,7 @@ export function MainTimerPage({
       <motion.div
         layout
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className={`flex flex-col items-center gap-8 z-50 ${isActive ? 'fixed bottom-16 md:bottom-24 left-1/2 -translate-x-1/2' : 'relative mt-6 md:mt-12'}`}
+        className={`flex flex-col items-center gap-8 z-50 ${isActive ? 'fixed bottom-24 left-1/2 -translate-x-1/2 hidden md:flex' : 'relative mt-6 md:mt-12'}`}
       >
         <div className="flex items-center gap-4 md:gap-6">
           {!isActive ? (
