@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Search, BookOpen, MoreVertical, X, File as FileIcon, Loader2, Download } from 'lucide-react';
+import { Upload, Search, BookOpen, MoreVertical, File as FileIcon, Loader2, Download, ArrowLeft, Sparkles } from 'lucide-react';
 import { getAuthHeader } from '../utils/auth';
 import { PDFViewer } from '../components/PDFViewer';
 import { TextViewer } from '../components/TextViewer';
@@ -296,7 +296,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           handleOpenQuizSetup();
         }}
       />
-      <div className="w-full h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 p-6 max-w-7xl mx-auto overflow-hidden relative">
+      <div className="w-full h-[calc(100vh-120px)] md:h-[calc(100vh-140px)] flex flex-col md:flex-row gap-4 md:gap-6 p-2 sm:p-6 max-w-7xl mx-auto overflow-hidden relative">
         <LoadingScreen isLoading={isUploading} message="Uploading and processing your document..." fullScreen={true} />
         <LoadingScreen isLoading={isGeneratingQuiz} message="Generating your quiz..." fullScreen={true} />
       
@@ -304,9 +304,9 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className={`flex flex-col gap-4 bg-[#141414] border border-white/5 rounded-[15px] p-5 overflow-hidden transition-all duration-300 ${selectedMaterial ? 'w-full md:w-80 hidden md:flex' : 'w-full'} shadow-2xl`}
+        className={`flex flex-col gap-4 bg-transparent md:bg-[#141414] border-0 md:border md:border-white/5 rounded-none md:rounded-[15px] p-2 sm:p-5 overflow-hidden transition-all duration-300 ${selectedMaterial ? 'w-full md:w-80 hidden md:flex' : 'w-full flex-1 md:flex-initial'} shadow-none md:shadow-2xl`}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-1 sm:px-0">
           <h2 className="text-lg font-medium text-white flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-gray-400" />
             Library
@@ -314,7 +314,8 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || !user}
-            className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-gray-300 disabled:opacity-50"
+            className="p-2.5 bg-white/5 hover:bg-white/10 active:bg-white/20 rounded-full transition-colors text-gray-300 disabled:opacity-50"
+            title="Upload Material"
           >
             {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           </button>
@@ -329,7 +330,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           accept=".pdf,.docx,.txt"
         />
 
-        <div className="relative mt-2">
+        <div className="relative mt-1 sm:mt-2">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
@@ -340,58 +341,61 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 space-y-2 mt-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-2 mt-2 custom-scrollbar">
           {filteredMaterials.map((material) => (
             <button
               key={material.id}
               onClick={() => setSelectedMaterial(material)}
-              className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-transparent border-transparent hover:bg-white/5'}`}
+              className={`w-full text-left p-3.5 sm:p-3 rounded-xl border transition-all flex items-start gap-3 active:scale-[0.99] ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-md' : 'bg-white/[0.02] md:bg-transparent border-white/5 md:border-transparent hover:bg-white/5'}`}
             >
               <div className="flex-1 min-w-0">
-                <h3 className={`text-sm font-medium truncate ${selectedMaterial?.id === material.id ? 'text-white' : 'text-gray-300'}`}>{material.name}</h3>
+                <h3 className={`text-sm font-medium truncate ${selectedMaterial?.id === material.id ? 'text-white' : 'text-gray-200 md:text-gray-300'}`}>{material.name}</h3>
                 <div className="flex items-center gap-2 mt-1.5 text-[10px] font-medium text-gray-500">
-                  <span className="bg-white/10 px-1.5 py-0.5 rounded text-gray-400">{material.type}</span>
+                  <span className="bg-white/10 px-1.5 py-0.5 rounded text-gray-300 md:text-gray-400">{material.type}</span>
                   <span>{material.dateAdded}</span>
                 </div>
               </div>
             </button>
           ))}
           {filteredMaterials.length === 0 && (
-            <div className="text-center py-10 text-gray-500 text-sm">
+            <div className="text-center py-12 text-gray-500 text-sm">
               No materials found.
             </div>
           )}
         </div>
       </motion.div>
 
-      {/* Main Content - Document Viewer */}
+      {/* Main Content - Document Viewer / Empty Desktop Placeholder */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex-1 bg-[#141414] border border-white/5 rounded-[15px] flex flex-col overflow-hidden relative shadow-2xl"
+        className={`${selectedMaterial ? 'flex' : 'hidden md:flex'} flex-1 bg-transparent md:bg-[#141414] border-0 md:border md:border-white/5 rounded-none md:rounded-[15px] flex-col overflow-hidden relative shadow-none md:shadow-2xl`}
       >
         {selectedMaterial ? (
           <>
             {/* Viewer Header */}
-            <div className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-[#1a1a1a]/50 backdrop-blur-md z-10">
-              <div className="flex items-center gap-4">
+            <div className="h-14 sm:h-16 border-b border-white/10 md:border-white/5 flex items-center justify-between px-3 sm:px-6 bg-[#141414] md:bg-[#1a1a1a]/50 backdrop-blur-md z-10">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <button
                   onClick={() => setSelectedMaterial(null)}
-                  className="md:hidden p-2 hover:bg-white/10 rounded-full text-gray-400 transition-colors"
+                  className="md:hidden p-2 -ml-1 hover:bg-white/10 active:bg-white/20 rounded-full text-gray-300 transition-colors flex items-center gap-1"
+                  aria-label="Back to materials library"
+                  title="Back to Library"
                 >
-                  <X className="w-5 h-5" />
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-                <div className="flex items-center gap-3 text-sm text-gray-400">
-                  <span className="truncate max-w-50 sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
+                <div className="flex items-center gap-3 text-sm text-gray-400 min-w-0">
+                  <span className="truncate max-w-[140px] xs:max-w-[200px] sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <button
                   onClick={handleOpenQuizSetup}
                   disabled={!selectedMaterial || isGeneratingQuiz || !isAIServiceHealthy}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-full text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-500/10 hover:bg-indigo-500/20 active:bg-indigo-500/30 text-indigo-400 rounded-full text-[11px] sm:text-xs font-semibold tracking-wide transition-all border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:text-gray-500"
                 >
-                  <span className="hidden sm:inline">{isGeneratingQuiz ? 'GENERATING...' : 'GENERATE QUIZ'}</span>
+                  <Sparkles className="w-3.5 h-3.5 sm:hidden" />
+                  <span>{isGeneratingQuiz ? 'GENERATING...' : 'GENERATE QUIZ'}</span>
                 </button>
                 <button
                   onClick={handleOpenQuizHistory}
@@ -413,17 +417,17 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
                   <TextViewer key={selectedMaterial.id} url={selectedMaterial.url!} title={selectedMaterial.name} />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-center p-8">
-                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-8 shadow-inner border border-white/5">
-                      <FileIcon className="w-10 h-10 text-blue-400" />
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 sm:mb-8 shadow-inner border border-white/5">
+                      <FileIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-medium text-white mb-2">Document Preview Unavailable</h3>
-                    <p className="text-gray-400 mb-8 max-w-sm">This file format ({selectedMaterial.type}) cannot be previewed directly in the browser.</p>
+                    <h3 className="text-lg sm:text-xl font-medium text-white mb-2">Document Preview Unavailable</h3>
+                    <p className="text-gray-400 mb-6 sm:mb-8 max-w-sm text-xs sm:text-sm">This file format ({selectedMaterial.type}) cannot be previewed directly in the browser.</p>
                     <a
                       href={selectedMaterial.url}
                       download={selectedMaterial.name}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium border border-white/10 flex items-center gap-2"
+                      className="px-5 py-2.5 sm:px-6 sm:py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium text-xs sm:text-sm border border-white/10 flex items-center gap-2"
                     >
                       <Download className="w-4 h-4" />
                       Download to view
@@ -457,3 +461,4 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
     </>
   );
 }
+
