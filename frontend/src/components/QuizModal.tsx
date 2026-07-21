@@ -95,10 +95,10 @@ function IdentificationAnswerField({
   let characterCursor = 0
 
   return (
-    <div className="relative mt-2 sm:mt-3 rounded-xl sm:rounded-2xl border border-white/10 bg-[#0f0f0f] px-3 py-3 sm:px-4 sm:py-4">
-      <div className="flex min-h-10 sm:min-h-12 flex-wrap items-end gap-2 sm:gap-4" aria-hidden="true">
+    <div className="relative mt-3 py-2 px-1">
+      <div className="flex min-h-10 sm:min-h-12 flex-wrap items-end gap-2.5 sm:gap-4" aria-hidden="true">
         {wordGroups.map((group, groupIndex) => (
-          <div key={`${groupIndex}-${group.length}`} className="flex items-end gap-1 sm:gap-1.5">
+          <div key={`${groupIndex}-${group.length}`} className="flex items-end gap-1.5 sm:gap-2">
             {group.map((_, slotIndex) => {
               const typedCharacter = typedCharacters[characterCursor++] || ''
               const isFilled = typedCharacter.length > 0
@@ -106,10 +106,10 @@ function IdentificationAnswerField({
               return (
                 <div
                   key={`${groupIndex}-${slotIndex}`}
-                  className={`flex h-7 w-2.5 sm:h-8 sm:w-10 items-end justify-center border-b-2 px-0.5 sm:px-1 pb-0.5 sm:pb-1 text-xs sm:text-sm font-semibold uppercase tracking-wide transition-colors ${
+                  className={`flex h-7 w-3 sm:h-9 sm:w-8 items-end justify-center border-b-2 px-0.5 pb-1 text-xs sm:text-base font-semibold uppercase tracking-wide transition-colors ${
                     isFilled
-                      ? 'border-indigo-300/70 text-white'
-                      : 'border-white/15 text-transparent'
+                      ? 'border-indigo-400 text-white'
+                      : 'border-white/20 text-transparent'
                   }`}
                 >
                   {typedCharacter || '_'}
@@ -127,7 +127,7 @@ function IdentificationAnswerField({
         aria-label="Identification answer"
         autoComplete="off"
         spellCheck={false}
-        className="absolute inset-0 h-full w-full cursor-text bg-transparent px-3 py-3 sm:px-4 sm:py-4 text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
+        className="absolute inset-0 h-full w-full cursor-text bg-transparent px-1 py-2 text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
       />
     </div>
   )
@@ -270,7 +270,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
   return (
     <AnimatePresence>
       {isOpen && quiz && (
-        <div className="fixed inset-0 z-250 flex items-center justify-center p-2 sm:p-6">
+        <div className="fixed inset-0 z-250 flex flex-col bg-[#121212]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -280,47 +280,48 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 18 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
-            className="relative w-full max-w-5xl max-h-[92vh] sm:max-h-[88vh] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="relative w-full h-full flex flex-col bg-[#121212] overflow-hidden"
           >
 
-            <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            {/* Top App Bar / Header */}
+            <div className="h-14 sm:h-16 border-b border-white/10 flex items-center justify-between px-4 sm:px-8 bg-[#141414]/90 backdrop-blur-md shrink-0 z-10 max-w-6xl w-full mx-auto">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  onClick={onClose}
+                  className="p-2 -ml-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
+                  title="Close quiz"
+                  aria-label="Close quiz"
+                >
+                  <X className="h-5 w-5" />
+                </button>
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-base sm:text-xl font-medium text-[#ededed]">
+                  <h2 className="truncate text-base sm:text-lg font-medium text-[#ededed]">
                     {quizData.title}
                   </h2>
-                  <p className="mt-0.5 text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">
-                    Generated quiz preview
-                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setIsAttemptsModalOpen(true)}
                   disabled={!quizData.id}
-                  className="inline-flex h-8 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 text-xs sm:text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 text-xs font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Attempts
-                </button>
-                <button
-                  onClick={onClose}
-                  className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <ListChecks className="h-3.5 w-3.5" />
+                  <span>Attempts</span>
                 </button>
               </div>
             </div>
 
-            <div className="max-h-[calc(92vh-60px)] sm:max-h-[calc(88vh-76px)] overflow-y-auto custom-scrollbar px-3.5 py-4 sm:px-6 sm:py-5">
+            {/* Scrollable Questions Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-6 max-w-4xl w-full mx-auto">
 
               {quizData.warnings?.length ? (
-                <div className="mt-2 sm:mt-4 rounded-xl sm:rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 sm:p-4 text-xs sm:text-sm text-amber-100">
+                <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs sm:text-sm text-amber-100">
                   <p className="font-medium text-amber-200">Generation notes</p>
                   <ul className="mt-1.5 space-y-1 text-amber-50/90">
                     {quizData.warnings.map((warning: string) => (
@@ -330,7 +331,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                 </div>
               ) : null}
 
-              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+              <div className="space-y-8 sm:space-y-10 pb-8">
                 {displayQuestions.map(({ key: questionKey, question, options }, index: number) => {
                   const normalizedOptions = options.map((option: any) => ({
                     id: option.id,
@@ -357,27 +358,23 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                   return (
                   <motion.section
                     key={question.id || `${index}`}
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.22, delay: index * 0.03 }}
-                    className="overflow-hidden rounded-xl sm:rounded-2xl border border-white/8 bg-[#171717] shadow-[0_12px_40px_rgba(0,0,0,0.22)]"
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    className="pb-8 border-b border-white/10 last:border-b-0"
                   >
-                    <div className="flex items-start justify-between gap-3 border-b border-white/5 px-3.5 py-3 sm:px-6 sm:py-4">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-indigo-200">
-                            Question {index + 1}
-                          </span>
-                        </div>
-                        <h3 className="mt-2.5 sm:mt-3 text-sm sm:text-lg font-medium leading-snug sm:leading-relaxed text-white">
-                          {question.question}
-                        </h3>
-                      </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="inline-flex items-center rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-indigo-300">
+                        Question {index + 1}
+                      </span>
                     </div>
+                    <h3 className="text-base sm:text-lg font-medium leading-relaxed text-white mb-4">
+                      {question.question}
+                    </h3>
 
-                    <div className="px-3.5 py-3.5 sm:px-6 sm:py-5">
+                    <div className="mt-2">
                       {normalizedOptions.length ? (
-                        <div className="grid gap-2 sm:gap-3 md:grid-cols-2">
+                        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2">
                           {normalizedOptions.map((option: any, optionIndex: number) => {
                             const correct = isCorrectOption(option, question)
                             const selected = selectedAnswer === option.id
@@ -392,41 +389,41 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                                     setResponses((current) => ({ ...current, [questionKey]: option.id }))
                                   }
                                 }}
-                                className={`flex cursor-pointer items-start gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-4 transition-colors active:scale-[0.99] ${
+                                className={`flex cursor-pointer items-start gap-3 rounded-xl p-3.5 sm:p-4 transition-all active:scale-[0.99] ${
                                   submitted
                                     ? correct
-                                      ? 'border-emerald-500/30 bg-emerald-500/10'
+                                      ? 'bg-emerald-500/15 text-emerald-200'
                                       : selected
-                                        ? 'border-red-500/30 bg-red-500/10'
-                                        : 'border-white/8 bg-white/3'
+                                        ? 'bg-red-500/15 text-red-200'
+                                        : 'bg-white/[0.03]'
                                     : selected
-                                      ? 'border-indigo-400/30 bg-indigo-500/10'
-                                      : 'border-white/8 bg-white/3'
+                                      ? 'bg-indigo-500/20 text-white'
+                                      : 'bg-white/[0.03] hover:bg-white/[0.08]'
                                 }`}
                               >
                                 <div
-                                  className={`mt-0.5 flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full border text-[10px] sm:text-xs font-semibold ${
+                                  className={`mt-0.5 flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
                                     submitted
                                       ? correct
-                                        ? 'border-emerald-400/30 bg-emerald-400 text-black'
+                                        ? 'bg-emerald-400 text-black'
                                         : selected
-                                          ? 'border-red-400/30 bg-red-400 text-black'
-                                          : 'border-white/10 bg-white/5 text-gray-400'
+                                          ? 'bg-red-400 text-black'
+                                          : 'bg-white/10 text-gray-400'
                                       : selected
-                                        ? 'border-indigo-400/30 bg-indigo-400 text-black'
-                                      : 'border-white/10 bg-white/5 text-gray-400'
+                                        ? 'bg-indigo-400 text-black'
+                                      : 'bg-white/10 text-gray-400'
                                   }`}
                                 >
-                                  {submitted && correct ? <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : optionIndex + 1}
+                                  {submitted && correct ? <CheckCircle2 className="h-3.5 w-3.5" /> : optionIndex + 1}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-gray-200">{option.text}</p>
+                                  <p className="text-xs sm:text-sm leading-relaxed text-gray-200">{option.text}</p>
                                   {submitted && correct ? (
-                                    <p className="mt-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-emerald-300">
+                                    <p className="mt-1 text-[11px] font-semibold uppercase text-emerald-300">
                                       Correct answer
                                     </p>
                                   ) : submitted && selected && !correct ? (
-                                    <p className="mt-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-red-300">
+                                    <p className="mt-1 text-[11px] font-semibold uppercase text-red-300">
                                       Your choice
                                     </p>
                                   ) : null}
@@ -436,34 +433,34 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                           })}
                         </div>
                       ) : (
-                        <div className="rounded-xl sm:rounded-2xl border border-white/8 bg-white/3 p-3 sm:p-4">
-                          <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Answer</p>
+                        <div className="py-2">
+                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Type your answer</p>
                           <IdentificationAnswerField
                             value={selectedAnswer}
                             onChange={(nextValue) => !submitted && setResponses((current) => ({ ...current, [questionKey]: nextValue }))}
                             correctAnswer={String(correctAnswer || '')}
                             disabled={submitted}
                           />
-                          <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
-                            <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">After submit</p>
-                            <p className={`mt-1.5 text-xs sm:text-sm ${submitted && answeredCorrectly ? 'text-emerald-300' : 'text-gray-200'}`}>
-                              {submitted
-                                ? answeredCorrectly
-                                  ? 'Correct answer'
-                                  : `Correct answer: ${correctAnswer || 'No answer provided'}`
-                                : 'Submit the quiz to check this response.'}
-                            </p>
-                          </div>
+                          {submitted && (
+                            <div className="mt-3 py-1">
+                              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Result</p>
+                              <p className={`mt-1 text-xs sm:text-sm font-medium ${answeredCorrectly ? 'text-emerald-300' : 'text-gray-200'}`}>
+                                {answeredCorrectly
+                                  ? 'Correct answer!'
+                                  : `Correct answer: ${correctAnswer || 'No answer provided'}`}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {submitted && question.explanation ? (
-                        <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-3 sm:p-4">
-                          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] uppercase tracking-wider text-cyan-200/80">
-                            <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <div className="mt-4 rounded-xl bg-cyan-500/10 p-3.5 sm:p-4 border-l-2 border-cyan-400">
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-cyan-200">
+                            <ChevronDown className="h-3.5 w-3.5" />
                             Explanation
                           </div>
-                          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-gray-200">{question.explanation}</p>
+                          <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-gray-200">{question.explanation}</p>
                         </div>
                       ) : null}
                     </div>
@@ -472,37 +469,39 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                 })}
               </div>
 
-              <div className="mt-4 sm:mt-6 flex flex-row items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-white/8 bg-white/3 p-3 sm:p-4">
-                <div>
-                  <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Progress</p>
-                  <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-medium text-gray-200">
-                    {Object.keys(responses).length} / {totalQuestions} answered
-                  </p>
-                  {submitted ? (
-                    <p className="mt-0.5 text-xs sm:text-sm font-medium text-emerald-300">
-                      Score: {score} / {totalQuestions}
-                    </p>
-                  ) : null}
-                </div>
+            </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <button
-                    onClick={resetQuizView}
-                    className="rounded-full border border-white/10 bg-white/5 px-3.5 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    onClick={submitQuiz}
-                    disabled={isSavingAttempt}
-                    className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3.5 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isSavingAttempt ? 'Saving...' : 'Check Answers'}
-                  </button>
-                </div>
+            {/* Bottom Progress & Action Bar */}
+            <div className="h-16 border-t border-white/10 bg-[#141414]/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0 z-10 max-w-6xl w-full mx-auto">
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Progress</p>
+                <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-200">
+                  {Object.keys(responses).length} / {totalQuestions} answered
+                </p>
+                {submitted ? (
+                  <p className="mt-0.5 text-xs sm:text-sm font-medium text-emerald-300">
+                    Score: {score} / {totalQuestions}
+                  </p>
+                ) : null}
               </div>
 
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  onClick={resetQuizView}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 sm:px-5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={submitQuiz}
+                  disabled={isSavingAttempt}
+                  className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-2 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSavingAttempt ? 'Saving...' : 'Check Answers'}
+                </button>
+              </div>
             </div>
+
           </motion.div>
 
           <QuizAttemptTrackerModal
