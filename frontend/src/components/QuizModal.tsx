@@ -288,7 +288,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
           >
 
             {/* Top App Bar / Header */}
-            <div className="h-14 sm:h-16 border-b border-white/10 flex items-center justify-between px-4 sm:px-8 bg-[#141414]/90 backdrop-blur-md shrink-0 z-10 max-w-6xl w-full mx-auto">
+            <div className="h-14 sm:h-16 border-b border-white/10 flex items-center justify-between px-4 sm:px-8 bg-[#141414]/90 backdrop-blur-md shrink-0 z-10 w-full">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   onClick={onClose}
@@ -318,7 +318,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
             </div>
 
             {/* Scrollable Questions Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-6 max-w-4xl w-full mx-auto">
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-6 w-full">
 
               {quizData.warnings?.length ? (
                 <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs sm:text-sm text-amber-100">
@@ -472,7 +472,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
             </div>
 
             {/* Bottom Progress & Action Bar */}
-            <div className="h-16 border-t border-white/10 bg-[#141414]/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0 z-10 max-w-6xl w-full mx-auto">
+            <div className="h-16 border-t border-white/10 bg-[#141414]/90 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between gap-4 shrink-0 z-10 w-full">
               <div>
                 <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Progress</p>
                 <p className="mt-0.5 text-xs sm:text-sm font-medium text-gray-200">
