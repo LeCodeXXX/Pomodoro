@@ -95,10 +95,10 @@ function IdentificationAnswerField({
   let characterCursor = 0
 
   return (
-    <div className="relative mt-3 rounded-2xl border border-white/10 bg-[#0f0f0f] px-4 py-4">
-      <div className="flex min-h-12 flex-wrap items-end gap-4" aria-hidden="true">
+    <div className="relative mt-2 sm:mt-3 rounded-xl sm:rounded-2xl border border-white/10 bg-[#0f0f0f] px-3 py-3 sm:px-4 sm:py-4">
+      <div className="flex min-h-10 sm:min-h-12 flex-wrap items-end gap-2 sm:gap-4" aria-hidden="true">
         {wordGroups.map((group, groupIndex) => (
-          <div key={`${groupIndex}-${group.length}`} className="flex items-end gap-1.5">
+          <div key={`${groupIndex}-${group.length}`} className="flex items-end gap-1 sm:gap-1.5">
             {group.map((_, slotIndex) => {
               const typedCharacter = typedCharacters[characterCursor++] || ''
               const isFilled = typedCharacter.length > 0
@@ -106,7 +106,7 @@ function IdentificationAnswerField({
               return (
                 <div
                   key={`${groupIndex}-${slotIndex}`}
-                  className={`flex h-8 w-3 items-end justify-center border-b-2 px-1 pb-1 text-sm font-semibold uppercase tracking-wide transition-colors sm:w-10 ${
+                  className={`flex h-7 w-2.5 sm:h-8 sm:w-10 items-end justify-center border-b-2 px-0.5 sm:px-1 pb-0.5 sm:pb-1 text-xs sm:text-sm font-semibold uppercase tracking-wide transition-colors ${
                     isFilled
                       ? 'border-indigo-300/70 text-white'
                       : 'border-white/15 text-transparent'
@@ -127,7 +127,7 @@ function IdentificationAnswerField({
         aria-label="Identification answer"
         autoComplete="off"
         spellCheck={false}
-        className="absolute inset-0 h-full w-full cursor-text bg-transparent px-4 py-4 text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
+        className="absolute inset-0 h-full w-full cursor-text bg-transparent px-3 py-3 sm:px-4 sm:py-4 text-transparent caret-transparent outline-none disabled:cursor-not-allowed"
       />
     </div>
   )
@@ -270,7 +270,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
   return (
     <AnimatePresence>
       {isOpen && quiz && (
-        <div className="fixed inset-0 z-250 flex items-center justify-center px-4 py-6 sm:px-6">
+        <div className="fixed inset-0 z-250 flex items-center justify-center p-2 sm:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -284,45 +284,45 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 18 }}
             transition={{ duration: 0.28, ease: 'easeOut' }}
-            className="relative w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
+            className="relative w-full max-w-5xl max-h-[92vh] sm:max-h-[88vh] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
           >
 
-            <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4 sm:px-6">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="min-w-0">
-                  <h2 className="truncate text-lg font-medium text-[#ededed] sm:text-xl">
+            <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 sm:px-6 sm:py-4">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate text-base sm:text-xl font-medium text-[#ededed]">
                     {quizData.title}
                   </h2>
-                  <p className="mt-1 text-[11px] uppercase text-gray-500">
+                  <p className="mt-0.5 text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">
                     Generated quiz preview
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={() => setIsAttemptsModalOpen(true)}
                   disabled={!quizData.id}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-8 sm:h-10 items-center gap-1.5 sm:gap-2 rounded-full border border-white/10 bg-white/5 px-3 sm:px-4 text-xs sm:text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <ListChecks className="h-4 w-4" />
+                  <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Attempts
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
 
-            <div className="max-h-[calc(88vh-76px)] overflow-y-auto custom-scrollbar px-5 py-5 sm:px-6">
+            <div className="max-h-[calc(92vh-60px)] sm:max-h-[calc(88vh-76px)] overflow-y-auto custom-scrollbar px-3.5 py-4 sm:px-6 sm:py-5">
 
               {quizData.warnings?.length ? (
-                <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-100">
+                <div className="mt-2 sm:mt-4 rounded-xl sm:rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 sm:p-4 text-xs sm:text-sm text-amber-100">
                   <p className="font-medium text-amber-200">Generation notes</p>
-                  <ul className="mt-2 space-y-1 text-amber-50/90">
+                  <ul className="mt-1.5 space-y-1 text-amber-50/90">
                     {quizData.warnings.map((warning: string) => (
                       <li key={warning}>{warning}</li>
                     ))}
@@ -330,7 +330,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                 </div>
               ) : null}
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
                 {displayQuestions.map(({ key: questionKey, question, options }, index: number) => {
                   const normalizedOptions = options.map((option: any) => ({
                     id: option.id,
@@ -360,24 +360,24 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.22, delay: index * 0.03 }}
-                    className="overflow-hidden rounded-2xl border border-white/8 bg-[#171717] shadow-[0_12px_40px_rgba(0,0,0,0.22)]"
+                    className="overflow-hidden rounded-xl sm:rounded-2xl border border-white/8 bg-[#171717] shadow-[0_12px_40px_rgba(0,0,0,0.22)]"
                   >
-                    <div className="flex items-start justify-between gap-4 border-b border-white/5 px-5 py-4 sm:px-6">
+                    <div className="flex items-start justify-between gap-3 border-b border-white/5 px-3.5 py-3 sm:px-6 sm:py-4">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold uppercase text-indigo-200">
+                          <span className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-indigo-200">
                             Question {index + 1}
                           </span>
                         </div>
-                        <h3 className="mt-4 text-base font-medium leading-relaxed text-white sm:text-lg">
+                        <h3 className="mt-2.5 sm:mt-3 text-sm sm:text-lg font-medium leading-snug sm:leading-relaxed text-white">
                           {question.question}
                         </h3>
                       </div>
                     </div>
 
-                    <div className="px-5 py-5 sm:px-6">
+                    <div className="px-3.5 py-3.5 sm:px-6 sm:py-5">
                       {normalizedOptions.length ? (
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid gap-2 sm:gap-3 md:grid-cols-2">
                           {normalizedOptions.map((option: any, optionIndex: number) => {
                             const correct = isCorrectOption(option, question)
                             const selected = selectedAnswer === option.id
@@ -392,7 +392,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                                     setResponses((current) => ({ ...current, [questionKey]: option.id }))
                                   }
                                 }}
-                                className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors ${
+                                className={`flex cursor-pointer items-start gap-2.5 sm:gap-3 rounded-xl sm:rounded-2xl border p-2.5 sm:p-4 transition-colors active:scale-[0.99] ${
                                   submitted
                                     ? correct
                                       ? 'border-emerald-500/30 bg-emerald-500/10'
@@ -405,7 +405,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                                 }`}
                               >
                                 <div
-                                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold ${
+                                  className={`mt-0.5 flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full border text-[10px] sm:text-xs font-semibold ${
                                     submitted
                                       ? correct
                                         ? 'border-emerald-400/30 bg-emerald-400 text-black'
@@ -417,16 +417,16 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                                       : 'border-white/10 bg-white/5 text-gray-400'
                                   }`}
                                 >
-                                  {submitted && correct ? <CheckCircle2 className="h-3.5 w-3.5" /> : optionIndex + 1}
+                                  {submitted && correct ? <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : optionIndex + 1}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-sm leading-relaxed text-gray-200">{option.text}</p>
+                                  <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-gray-200">{option.text}</p>
                                   {submitted && correct ? (
-                                    <p className="mt-1 text-[11px] font-semibold uppercase text-emerald-300">
+                                    <p className="mt-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-emerald-300">
                                       Correct answer
                                     </p>
                                   ) : submitted && selected && !correct ? (
-                                    <p className="mt-1 text-[11px] font-semibold uppercase text-red-300">
+                                    <p className="mt-0.5 text-[10px] sm:text-[11px] font-semibold uppercase text-red-300">
                                       Your choice
                                     </p>
                                   ) : null}
@@ -436,17 +436,17 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                           })}
                         </div>
                       ) : (
-                        <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                          <p className="text-[11px] uppercase text-gray-500">Answer</p>
+                        <div className="rounded-xl sm:rounded-2xl border border-white/8 bg-white/3 p-3 sm:p-4">
+                          <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Answer</p>
                           <IdentificationAnswerField
                             value={selectedAnswer}
                             onChange={(nextValue) => !submitted && setResponses((current) => ({ ...current, [questionKey]: nextValue }))}
                             correctAnswer={String(correctAnswer || '')}
                             disabled={submitted}
                           />
-                          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                            <p className="text-[11px] uppercase text-gray-500">After submit</p>
-                            <p className={`mt-2 text-sm ${submitted && answeredCorrectly ? 'text-emerald-300' : 'text-gray-200'}`}>
+                          <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+                            <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">After submit</p>
+                            <p className={`mt-1.5 text-xs sm:text-sm ${submitted && answeredCorrectly ? 'text-emerald-300' : 'text-gray-200'}`}>
                               {submitted
                                 ? answeredCorrectly
                                   ? 'Correct answer'
@@ -458,12 +458,12 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                       )}
 
                       {submitted && question.explanation ? (
-                        <div className="mt-4 rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-4">
-                          <div className="flex items-center gap-2 text-[11px] uppercase text-cyan-200/80">
-                            <ChevronDown className="h-4 w-4" />
+                        <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl border border-cyan-500/10 bg-cyan-500/5 p-3 sm:p-4">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] uppercase tracking-wider text-cyan-200/80">
+                            <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             Explanation
                           </div>
-                          <p className="mt-2 text-sm leading-relaxed text-gray-200">{question.explanation}</p>
+                          <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-gray-200">{question.explanation}</p>
                         </div>
                       ) : null}
                     </div>
@@ -472,30 +472,30 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                 })}
               </div>
 
-              <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-4 sm:mt-6 flex flex-row items-center justify-between gap-3 rounded-xl sm:rounded-2xl border border-white/8 bg-white/3 p-3 sm:p-4">
                 <div>
-                  <p className="text-[11px] uppercase text-gray-500">Progress</p>
-                  <p className="mt-2 text-sm text-gray-200">
+                  <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-gray-500">Progress</p>
+                  <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm font-medium text-gray-200">
                     {Object.keys(responses).length} / {totalQuestions} answered
                   </p>
                   {submitted ? (
-                    <p className="mt-1 text-sm text-emerald-300">
+                    <p className="mt-0.5 text-xs sm:text-sm font-medium text-emerald-300">
                       Score: {score} / {totalQuestions}
                     </p>
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <button
                     onClick={resetQuizView}
-                    className="rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                    className="rounded-full border border-white/10 bg-white/5 px-3.5 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     Reset
                   </button>
                   <button
                     onClick={submitQuiz}
                     disabled={isSavingAttempt}
-                    className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-5 py-2.5 text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3.5 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-semibold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSavingAttempt ? 'Saving...' : 'Check Answers'}
                   </button>
