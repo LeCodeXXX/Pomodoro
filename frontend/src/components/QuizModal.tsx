@@ -276,6 +276,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
@@ -284,7 +285,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
             className="relative w-full h-full flex flex-col bg-[#121212] overflow-hidden"
           >
 
@@ -361,7 +362,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
                     key={question.id || `${index}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    transition={{ duration: 0.15, delay: Math.min(index * 0.012, 0.12) }}
                     className="pb-8 border-b border-white/10 last:border-b-0"
                   >
                     <div className="flex items-center gap-2 mb-3">

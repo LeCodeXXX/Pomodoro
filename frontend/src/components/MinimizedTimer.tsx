@@ -32,10 +32,11 @@ export function MinimizedTimer({ timerState, timerActions }: MinimizedTimerProps
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
           drag
           dragMomentum={false}
           dragElastic={0.1}
-          className="pointer-events-auto flex items-center gap-3 bg-[#1a1a1a]/95 backdrop-blur-2xl border border-white/10 rounded-full py-2.5 pl-3 pr-2.5 shadow-[0_20px_40px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing select-none"
+          className="pointer-events-auto flex items-center gap-3 bg-[#1a1a1a]/95 backdrop-blur-md md:backdrop-blur-2xl border border-white/10 rounded-full py-2.5 pl-3 pr-2.5 shadow-[0_20px_40px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing select-none will-change-transform"
         >
           {/* Drag Handle Icon */}
           <div className="text-white/30 hover:text-white/50 transition-colors cursor-grab active:cursor-grabbing">

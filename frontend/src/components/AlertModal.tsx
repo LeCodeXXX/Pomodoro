@@ -17,6 +17,7 @@ export function AlertModal({ isOpen, onClose, title, message }: AlertModalProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
@@ -24,7 +25,8 @@ export function AlertModal({ isOpen, onClose, title, message }: AlertModalProps)
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative bg-[#1a1a1a] border border-red-500/20 shadow-2xl rounded-2xl w-full max-w-sm overflow-hidden z-10"
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="relative bg-[#1a1a1a] border border-red-500/20 shadow-2xl rounded-2xl w-full max-w-sm overflow-hidden z-10 will-change-transform"
           >
             <div className="p-6">
               <div className="flex items-start justify-between">

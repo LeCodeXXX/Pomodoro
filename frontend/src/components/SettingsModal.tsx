@@ -63,6 +63,7 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           />
@@ -70,7 +71,8 @@ export function SettingsModal({ isOpen, onClose, timerModes, onUpdateMode }: Set
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-[calc(100%-2rem)] max-w-md bg-[#141414] border border-white/10 p-5 md:p-8 rounded-[20px] shadow-2xl flex flex-col gap-4 md:gap-8 max-h-[90vh] overflow-y-auto no-scrollbar"
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="relative w-[calc(100%-2rem)] max-w-md bg-[#141414] border border-white/10 p-5 md:p-8 rounded-[20px] shadow-2xl flex flex-col gap-4 md:gap-8 max-h-[90vh] overflow-y-auto no-scrollbar will-change-transform"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-xl md:text-2xl font-medium tracking-widest text-[#ededed]">SETTINGS</h2>

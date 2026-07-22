@@ -85,6 +85,7 @@ export function QuizAttemptTrackerModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/75 backdrop-blur-md"
           />
@@ -93,8 +94,8 @@ export function QuizAttemptTrackerModal({
             initial={{ opacity: 0, scale: 0.97, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 16 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)]"
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-[#121212] shadow-[0_30px_100px_rgba(0,0,0,0.75)] will-change-transform"
           >
             <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 sm:px-6 sm:py-4">
               <div className="min-w-0 flex-1">

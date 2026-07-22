@@ -305,7 +305,8 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className={`flex flex-col gap-4 bg-transparent md:bg-[#141414] border-0 md:border md:border-white/5 rounded-none md:rounded-[15px] p-2 sm:p-5 overflow-hidden transition-all duration-300 ${selectedMaterial ? 'w-full md:w-80 hidden md:flex' : 'w-full flex-1 md:flex-initial'} shadow-none md:shadow-2xl`}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        className={`flex flex-col gap-4 bg-transparent md:bg-[#141414] border-0 md:border md:border-white/5 rounded-none md:rounded-[15px] p-2 sm:p-5 overflow-hidden transition-[width,opacity,transform] duration-200 ${selectedMaterial ? 'w-full md:w-80 hidden md:flex' : 'w-full flex-1 md:flex-initial'} shadow-none md:shadow-2xl`}
       >
         <div className="flex items-center justify-between px-1 sm:px-0">
           <h2 className="text-lg font-medium text-white flex items-center gap-2">
@@ -347,7 +348,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
             <button
               key={material.id}
               onClick={() => setSelectedMaterial(material)}
-              className={`w-full text-left p-3.5 sm:p-3 rounded-xl border transition-all flex items-start gap-3 active:scale-[0.99] ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-md' : 'bg-white/2 md:bg-transparent border-white/5 md:border-transparent hover:bg-white/5'}`}
+              className={`w-full text-left p-3.5 sm:p-3 rounded-xl border transition-[background-color,border-color,transform] duration-150 flex items-start gap-3 active:scale-[0.99] ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-md' : 'bg-white/2 md:bg-transparent border-white/5 md:border-transparent hover:bg-white/5'}`}
             >
               <div className="flex-1 min-w-0">
                 <h3 className={`text-sm font-medium truncate ${selectedMaterial?.id === material.id ? 'text-white' : 'text-gray-200 md:text-gray-300'}`}>{material.name}</h3>
@@ -370,6 +371,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
         className={`${selectedMaterial ? 'flex' : 'hidden md:flex'} flex-1 bg-transparent md:bg-[#141414] border-0 md:border md:border-white/5 rounded-none md:rounded-[15px] flex-col overflow-hidden relative shadow-none md:shadow-2xl`}
       >
         {selectedMaterial ? (

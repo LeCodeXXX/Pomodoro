@@ -208,6 +208,7 @@ export function PDFViewer({ url, title }: PDFViewerProps) {
               key={`page_${pageNumber}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
               style={{
                 transform: `scale(${touchScale}) translate(${panOffset.x / touchScale}px, ${panOffset.y / touchScale}px)`,
                 transformOrigin: 'center top',

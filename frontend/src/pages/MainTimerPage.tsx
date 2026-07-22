@@ -60,7 +60,7 @@ export function MainTimerPage({
     <>
       <motion.div
         layout={!isMobile}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={isMobile ? { type: 'spring', stiffness: 450, damping: 32 } : { type: 'spring', stiffness: 420, damping: 34 }}
         className={`w-full max-w-5xl ${isActive ? 'h-0' : (isMobile ? 'flex flex-col gap-3 h-auto items-center' : 'relative flex items-center justify-center h-125 overflow-visible')}`}
       >
         <AnimatePresence mode="popLayout">
@@ -90,9 +90,9 @@ export function MainTimerPage({
                   opacity: isActive ? 1 : isSelected ? 1 : 0.3,
                   zIndex: isActive ? 40 : isSelected ? 10 : 1,
                 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={isMobile ? { type: 'spring', stiffness: 450, damping: 32 } : { type: 'spring', stiffness: 420, damping: 34 }}
                 onClick={() => !isActive && onSetSelectedMode(mode.id)}
-                className={`border flex items-center shadow-2xl backdrop-blur-sm transition-colors duration-200
+                className={`border flex items-center shadow-2xl backdrop-blur-sm transition-colors duration-200 will-change-transform
                   ${isActive ? 'flex-col fixed inset-0 w-full h-full bg-[#0a0a0a] rounded-none cursor-default justify-center pb-0 md:pb-32 z-40' : 
                     isMobile ? `relative bg-[#141414] rounded-[20px] w-72 h-[10vh] min-h-[72px] max-h-[100px] cursor-pointer px-5 py-3 justify-between ${isSelected ? 'border-white/20 bg-white/5 ring-1 ring-white/10' : 'border-white/5'}` : 
                     `absolute bg-[#141414] rounded-[30px] w-75 h-100 cursor-pointer p-10 justify-between ${isSelected ? 'ring-1 ring-white/10 border-white/10' : 'border-white/5'}`}`}
@@ -122,7 +122,7 @@ export function MainTimerPage({
                   <motion.div
                     initial={isMobile ? { opacity: 0, y: 40 } : false}
                     animate={isMobile ? { opacity: 1, y: 0 } : false}
-                    transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 28 }}
                     className={`flex flex-col items-center w-full h-full ${isActive ? 'justify-center' : 'justify-between'} ${isActive && isMobile ? 'gap-8 px-6' : ''}`}
                   >
                     <motion.div
@@ -139,10 +139,10 @@ export function MainTimerPage({
                         {isActive && (isWorkSession ? 'WORK' : 'BREAK')}
                       </span>
 
-                      <div className={`flex flex-col items-center ${isSelected ? 'text-white' : 'text-gray-400 opacity-60'}`}>
+                      <div className={`flex flex-col items-center ${isSelected ? 'text-[#ededed]' : 'text-gray-400 opacity-60'}`}>
                         <motion.span
                           layout
-                          className={`${isActive ? 'text-7xl md:text-9xl' : 'text-6xl'} font-light tracking-tight tabular-nums transition-all duration-500`}
+                          className={`${isActive ? 'text-7xl md:text-9xl' : 'text-6xl'} font-light tracking-tight tabular-nums transition-[color,opacity,transform] duration-200`}
                         >
                           {isActive ? formatTime(timeLeft) : mode.time}
                         </motion.span>
@@ -207,7 +207,7 @@ export function MainTimerPage({
       {/* Controls */}
       <motion.div
         layout
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        transition={isMobile ? { type: 'spring', stiffness: 450, damping: 32 } : { type: 'spring', stiffness: 420, damping: 34 }}
         className={`flex flex-col items-center gap-8 z-50 ${isActive ? 'fixed bottom-24 left-1/2 -translate-x-1/2 hidden md:flex' : 'relative mt-6 md:mt-12'}`}
       >
         <div className="flex items-center gap-4 md:gap-6">
