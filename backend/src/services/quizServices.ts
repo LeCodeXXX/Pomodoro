@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import axios from "axios";
 import { prisma } from "../lib/prisma";
 import * as documentServices from "./documentServices";
 import aiService from "./aiService";
@@ -24,121 +25,146 @@ export const generateQuizAndSave = async (input: GenerateQuizInput) => {
     let filePath = file?.path;
     let originalFilename = file?.originalname;
     let title = (quizLabel as string) || "Quiz";
+    let tempDownloadedFilePath: string | null = null;
 
-    if (!filePath) {
-        if (!documentId) {
-            throw new Error("Provide either an uploaded file or a documentId");
+    try {
+        if (!filePath) {
+            if (!documentId) {
+                throw new Error("Provide either an uploaded file or a documentId");
+            }
+
+            const document = await documentServices.getDocumentById(documentId, userId);
+            title = (quizLabel as string) || document.title;
+            originalFilename = path.basename(document.fileUrl);
+
+            if (document.fileUrl.startsWith("http")) {
+                console.log(`[Quiz Service] Downloading remote document from URL: ${document.fileUrl}`);
+                const response = await axios.get(document.fileUrl, { responseType: "arraybuffer" });
+                const tempDir = path.join(process.cwd(), "uploads");
+                if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+                const ext = path.extname(originalFilename) || ".pdf";
+                const tempFilename = `temp-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+                tempDownloadedFilePath = path.join(tempDir, tempFilename);
+
+                fs.writeFileSync(tempDownloadedFilePath, Buffer.from(response.data));
+                filePath = tempDownloadedFilePath;
+            } else {
+                filePath = path.join(process.cwd(), document.fileUrl);
+                if (!fs.existsSync(filePath)) {
+                    throw new Error("Source document file was not found on disk");
+                }
+            }
         }
 
-        const document = await documentServices.getDocumentById(documentId, userId);
-        filePath = path.join(process.cwd(), document.fileUrl);
-        originalFilename = path.basename(document.fileUrl);
-        title = (quizLabel as string) || document.title;
+        const safeTitle =
+            title || path.basename(originalFilename || "quiz", path.extname(originalFilename || ""));
 
-        if (!fs.existsSync(filePath)) {
-            throw new Error("Source document file was not found on disk");
-        }
-    }
-
-    const safeTitle =
-        title || path.basename(originalFilename || "quiz", path.extname(originalFilename || ""));
-
-    // ── Step 1: Extract text via the AI service ────────────────────────
-    console.log(`[Quiz Service] Step 1: Sending file for extraction — ${path.basename(filePath)}`);
-    const docResult = await aiService.processDocument(
-        filePath,
-        originalFilename || path.basename(filePath),
-        userId,
-        safeTitle
-    );
-
-    if (docResult.status !== "success") {
-        throw new Error(docResult.error || "Document extraction failed");
-    }
-
-    // ── Step 2: Generate quiz via the AI service ───────────────────────
-    const difficultyMap: Record<string, string> = {
-        EASY: "easy",
-        MEDIUM: "medium",
-        HARD: "hard",
-    };
-    const questionTypeMap: Record<string, string> = {
-        MULTIPLE_CHOICE: "multiple_choice",
-        IDENTIFICATION: "identification",
-        TRUE_FALSE: "true_false",
-    };
-
-    const aiDifficulty = difficultyMap[difficulty] || difficulty.toLowerCase();
-    const aiQuestionType = questionTypeMap[questionType] || questionType.toLowerCase();
-
-    console.log(
-        `[Quiz Service] Step 2: Generating ${numQuestions} ${aiDifficulty} ${aiQuestionType} questions`
-    );
-
-    const quizResult = await aiService.generateQuiz(
-        docResult.document_id,
-        docResult.content.raw_text,
-        {
-            difficulty: aiDifficulty,
-            question_type: aiQuestionType,
-            num_questions: typeof numQuestions === "string" ? parseInt(numQuestions, 10) : numQuestions,
-            quiz_label: quizLabel,
-            focus_topics: typeof focusTopics === "string" ? focusTopics.trim() : "",
-        },
-        userId
-    );
-
-    if (quizResult.status !== "success") {
-        throw new Error(quizResult.error || "Quiz generation failed");
-    }
-
-    // ── Step 3: Persist to database ────────────────────────────────────
-    console.log(
-        `[Quiz Service] Step 3: Saving quiz with ${quizResult.questions.length} questions to database`
-    );
-
-    const prismaDifficulty = difficulty as "EASY" | "MEDIUM" | "HARD";
-    const prismaQuestionType = questionType as "MULTIPLE_CHOICE" | "IDENTIFICATION" | "TRUE_FALSE";
-
-    const savedQuiz = await prisma.quiz.create({
-        data: {
-            title: quizResult.quiz.title,
-            label: quizResult.quiz.label,
-            difficulty: prismaDifficulty,
-            questionType: prismaQuestionType,
-            totalQuestions: quizResult.questions.length,
+        // ── Step 1: Extract text via the AI service ────────────────────────
+        console.log(`[Quiz Service] Step 1: Sending file for extraction — ${path.basename(filePath)}`);
+        const docResult = await aiService.processDocument(
+            filePath,
+            originalFilename || path.basename(filePath),
             userId,
-            documentId: documentId || null,
-            questions: {
-                create: quizResult.questions.map((q: any) => ({
-                    question: q.question,
-                    answer: q.correct_answer,
-                    explanation: q.explanation || "",
-                    options: {
-                        create:
-                            q.options?.map((opt: any) => ({
-                                optionText: opt.text,
-                                isCorrect: opt.is_correct,
-                            })) || [],
-                    },
-                })),
+            safeTitle
+        );
+
+        if (docResult.status !== "success") {
+            throw new Error(docResult.error || "Document extraction failed");
+        }
+
+        // ── Step 2: Generate quiz via the AI service ───────────────────────
+        const difficultyMap: Record<string, string> = {
+            EASY: "easy",
+            MEDIUM: "medium",
+            HARD: "hard",
+        };
+        const questionTypeMap: Record<string, string> = {
+            MULTIPLE_CHOICE: "multiple_choice",
+            IDENTIFICATION: "identification",
+            TRUE_FALSE: "true_false",
+        };
+
+        const aiDifficulty = difficultyMap[difficulty] || difficulty.toLowerCase();
+        const aiQuestionType = questionTypeMap[questionType] || questionType.toLowerCase();
+
+        console.log(
+            `[Quiz Service] Step 2: Generating ${numQuestions} ${aiDifficulty} ${aiQuestionType} questions`
+        );
+
+        const quizResult = await aiService.generateQuiz(
+            docResult.document_id,
+            docResult.content.raw_text,
+            {
+                difficulty: aiDifficulty,
+                question_type: aiQuestionType,
+                num_questions: typeof numQuestions === "string" ? parseInt(numQuestions, 10) : numQuestions,
+                quiz_label: quizLabel,
+                focus_topics: typeof focusTopics === "string" ? focusTopics.trim() : "",
             },
-        },
-        include: {
-            questions: {
-                include: {
-                    options: true,
+            userId
+        );
+
+        if (quizResult.status !== "success") {
+            throw new Error(quizResult.error || "Quiz generation failed");
+        }
+
+        // ── Step 3: Persist to database ────────────────────────────────────
+        console.log(
+            `[Quiz Service] Step 3: Saving quiz with ${quizResult.questions.length} questions to database`
+        );
+
+        const prismaDifficulty = difficulty as "EASY" | "MEDIUM" | "HARD";
+        const prismaQuestionType = questionType as "MULTIPLE_CHOICE" | "IDENTIFICATION" | "TRUE_FALSE";
+
+        const savedQuiz = await prisma.quiz.create({
+            data: {
+                title: quizResult.quiz.title,
+                label: quizResult.quiz.label,
+                difficulty: prismaDifficulty,
+                questionType: prismaQuestionType,
+                totalQuestions: quizResult.questions.length,
+                userId,
+                documentId: documentId || null,
+                questions: {
+                    create: quizResult.questions.map((q: any) => ({
+                        question: q.question,
+                        answer: q.correct_answer,
+                        explanation: q.explanation || "",
+                        options: {
+                            create:
+                                q.options?.map((opt: any) => ({
+                                    optionText: opt.text,
+                                    isCorrect: opt.is_correct,
+                                })) || [],
+                        },
+                    })),
                 },
             },
-        },
-    });
+            include: {
+                questions: {
+                    include: {
+                        options: true,
+                    },
+                },
+            },
+        });
 
-    console.log(`[Quiz Service] Done — quiz ${savedQuiz.id} saved successfully`);
+        console.log(`[Quiz Service] Done — quiz ${savedQuiz.id} saved successfully`);
 
-    return {
-        quiz: savedQuiz,
-        metadata: quizResult.metadata,
-    };
+        return {
+            quiz: savedQuiz,
+            metadata: quizResult.metadata,
+        };
+    } finally {
+        if (tempDownloadedFilePath && fs.existsSync(tempDownloadedFilePath)) {
+            try {
+                fs.unlinkSync(tempDownloadedFilePath);
+            } catch (err) {
+                console.error("Failed to clean up temporary downloaded document file:", err);
+            }
+        }
+    }
 };
 
 export const getQuizzesByDocumentId = async (documentId: string, userId: string) => {
