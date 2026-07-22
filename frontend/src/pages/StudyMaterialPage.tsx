@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Search, BookOpen, MoreVertical, File as FileIcon, Loader2, Download, ArrowLeft, Sparkles } from 'lucide-react';
 import { getAuthHeader } from '../utils/auth';
+import { apiUrl } from '../utils/api';
 import { PDFViewer } from '../components/PDFViewer';
 import { TextViewer } from '../components/TextViewer';
 import { LoadingScreen } from '../components/LoadingScreen';
@@ -54,7 +55,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
 
   const checkAIServiceHealth = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/quiz/health', {
+      const res = await fetch(apiUrl('/api/quiz/health'), {
         method: 'GET',
         headers: { ...getAuthHeader() },
       })
@@ -74,7 +75,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
   const fetchMaterials = async () => {
     if (!user) return;
     try {
-      const response = await fetch('http://localhost:3000/api/documents', {
+      const response = await fetch(apiUrl('/api/documents'), {
         headers: { ...getAuthHeader() }
       });
       const data = await response.json();
@@ -84,7 +85,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
           name: doc.title,
           type: doc.fileUrl.split('.').pop()?.toUpperCase() || 'UNKNOWN',
           dateAdded: new Date(doc.createdAt).toLocaleDateString(),
-          url: `http://localhost:3000${doc.fileUrl}`,
+          url: apiUrl(doc.fileUrl),
           size: 'Unknown'
         }));
         setMaterials(fetchedMaterials);
@@ -111,7 +112,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       setSavedQuizError(null);
 
       try {
-        const response = await fetch(`http://localhost:3000/api/quiz/document/${selectedMaterial.id}`, {
+        const response = await fetch(apiUrl(`/api/quiz/document/${selectedMaterial.id}`), {
           headers: { ...getAuthHeader() },
         });
 
@@ -192,7 +193,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
         formData.append('focusTopics', settings.focusTopics.trim());
       }
 
-      const response = await fetch('http://localhost:3000/api/quiz/generate', {
+      const response = await fetch(apiUrl('/api/quiz/generate'), {
         method: 'POST',
         headers: { ...getAuthHeader() },
         body: formData,
@@ -222,7 +223,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
       formData.append('file', file);
       
       try {
-        const response = await fetch('http://localhost:3000/api/documents/upload', {
+        const response = await fetch(apiUrl('/api/documents/upload'), {
           method: 'POST',
           headers: { ...getAuthHeader() },
           body: formData
@@ -236,7 +237,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
             name: doc.title,
             type: doc.fileUrl.split('.').pop()?.toUpperCase() || 'UNKNOWN',
             dateAdded: 'Just now',
-            url: `http://localhost:3000${doc.fileUrl}`,
+            url: apiUrl(doc.fileUrl),
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
           };
           setMaterials([newMaterial, ...materials]);
@@ -346,7 +347,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
             <button
               key={material.id}
               onClick={() => setSelectedMaterial(material)}
-              className={`w-full text-left p-3.5 sm:p-3 rounded-xl border transition-all flex items-start gap-3 active:scale-[0.99] ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-md' : 'bg-white/[0.02] md:bg-transparent border-white/5 md:border-transparent hover:bg-white/5'}`}
+              className={`w-full text-left p-3.5 sm:p-3 rounded-xl border transition-all flex items-start gap-3 active:scale-[0.99] ${selectedMaterial?.id === material.id ? 'bg-white/10 border-white/20 shadow-md' : 'bg-white/2 md:bg-transparent border-white/5 md:border-transparent hover:bg-white/5'}`}
             >
               <div className="flex-1 min-w-0">
                 <h3 className={`text-sm font-medium truncate ${selectedMaterial?.id === material.id ? 'text-white' : 'text-gray-200 md:text-gray-300'}`}>{material.name}</h3>
@@ -385,7 +386,7 @@ export function StudyMaterialPage({ user }: StudyMaterialPageProps) {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3 text-sm text-gray-400 min-w-0">
-                  <span className="truncate max-w-[140px] xs:max-w-[200px] sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
+                  <span className="truncate max-w-35 xs:max-w-[200px] sm:max-w-md text-white font-medium">{selectedMaterial.name}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">

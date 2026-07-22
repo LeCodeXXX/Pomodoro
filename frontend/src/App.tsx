@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Coffee, Target, Zap, UserCircle, LogOut } from 'lucide-react'
 import { getAuthHeader, storeToken, clearToken } from './utils/auth'
+import { apiUrl } from './utils/api'
 
 import { type TimerMode } from './components/SettingsModal'
 import { AuthModal } from './components/AuthModal'
@@ -80,7 +81,7 @@ function App() {
   const fetchStats = useCallback(async () => {
     setStatsLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/api/users/stats', {
+      const res = await fetch(apiUrl('/api/users/stats'), {
         headers: { ...getAuthHeader() },
       })
       if (res.ok) setStats(await res.json())
@@ -172,7 +173,7 @@ function App() {
       }
 
       try {
-        const res = await fetch('http://localhost:3000/api/users/timer-settings', {
+        const res = await fetch(apiUrl('/api/users/timer-settings'), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -216,7 +217,7 @@ function App() {
   const flushCompletedSession = useCallback(async (focusDuration: number, breakDuration: number) => {
     if (!user) return
     try {
-      await fetch('http://localhost:3000/api/users/pomodoro-session', {
+      await fetch(apiUrl('/api/users/pomodoro-session'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

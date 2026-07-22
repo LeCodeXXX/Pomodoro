@@ -17,10 +17,17 @@ if (!PORT) {
     throw new Error("Please provide a PORT in the .env file");
 }
 
+if (!process.env.FRONTEND_URL) {
+    throw new Error("Please provide a FRONTEND_URL in the .env file");
+}
+
 app.use(cors({
-    origin: "*",
+    origin: [
+        process.env.FRONTEND_URL
+    ],
     allowedHeaders: ["Content-Type", "Authorization", "x-user-id"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
 }));
 app.use(express.json());
 
@@ -33,6 +40,5 @@ app.use("/api", documentRoutes);
 app.use("/api", quizRoutes);
 app.use("/api", userRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+
+app.listen(PORT);

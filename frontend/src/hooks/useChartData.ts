@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getAuthHeader } from '../utils/auth'
+import { apiUrl } from '../utils/api'
 
 export type ChartFilter = 'daily' | 'weekly' | 'monthly'
 
@@ -40,7 +41,7 @@ export function useChartData(userId: string | undefined, filter: ChartFilter) {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/users/chart-data?filter=${f}`,
+        apiUrl(`/api/users/chart-data?filter=${f}`),
         { headers: { ...getAuthHeader() } }
       )
       if (!res.ok) throw new Error('Failed to fetch chart data')

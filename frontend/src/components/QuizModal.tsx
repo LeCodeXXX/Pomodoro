@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { getAuthHeader } from '../utils/auth'
+import { apiUrl } from '../utils/api'
 import { CheckCircle2, ChevronDown, ListChecks, X } from 'lucide-react'
 import { QuizAttemptTrackerModal } from './QuizAttemptTrackerModal.tsx'
 
@@ -242,7 +243,7 @@ export function QuizModal({ isOpen, onClose, quiz, userId }: QuizModalProps) {
     setIsSavingAttempt(true)
 
     try {
-      const response = await fetch(`http://localhost:3000/api/quiz/${quizData.id}/attempts`, {
+      const response = await fetch(apiUrl(`/api/quiz/${quizData.id}/attempts`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

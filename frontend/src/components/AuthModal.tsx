@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, X } from 'lucide-react'
 import { FcGoogle } from "react-icons/fc";
+import { apiUrl } from '../utils/api'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -26,7 +27,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
       const body = isLogin ? { email, password } : { name, email, password }
 
-      const response = await fetch(`http://localhost:3000${endpoint}`, {
+      const response = await fetch(apiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = 'http://localhost:3000/api/auth/google'
+                  window.location.href = apiUrl('/api/auth/google')
                 }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-medium text-[#ededed] transition hover:bg-white/10"
               >
